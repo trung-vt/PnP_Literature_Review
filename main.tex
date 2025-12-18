@@ -1,0 +1,363 @@
+% ============================================================
+% Template: Review on Plug-and-Play (PnP) Methods in Inverse Problems
+% Paste into Overleaf and adapt. British English, starred sections,
+% and \addcontentsline for ToC entries as requested.
+% ============================================================
+
+\documentclass[11pt,a4paper]{article}
+
+% ---------- Packages ----------
+\usepackage[british]{babel}
+\usepackage[T1]{fontenc}
+\usepackage{lmodern}
+\usepackage[a4paper,margin=1in]{geometry}
+\usepackage{microtype}
+\usepackage{setspace}
+\onehalfspacing
+
+\usepackage{amsmath,amssymb,mathtools,amsthm}
+\numberwithin{equation}{section}
+
+\usepackage{bm}
+\usepackage{siunitx}
+\usepackage{graphicx}
+\usepackage{subcaption}
+\usepackage{booktabs}
+\usepackage{enumitem}
+\usepackage{xcolor}
+\usepackage{hyperref}
+\usepackage[nameinlink,capitalize]{cleveref}
+\usepackage{algorithm}
+\usepackage[noend]{algpseudocode}
+
+% ---------- Hyperref ----------
+\hypersetup{
+    colorlinks=true,
+    linkcolor=blue!40!black,
+    citecolor=blue!40!black,
+    urlcolor=blue!40!black,
+    pdfauthor={\textbf{TODO: Your Name}},
+    pdftitle={Plug-and-Play Methods in Inverse Problems: A Review}
+}
+
+% ---------- Macros (align with your notation preferences) ----------
+% Iteration index style (\cdot)^{(t)}
+\newcommand{\iter}[1]{#1^{(t)}}
+\newcommand{\itern}[2]{#1^{(t+#2)}}
+
+% Cost function E (not J)
+\newcommand{\E}{E}
+
+% Linear forward operator and variables
+\newcommand{\A}{A}
+\newcommand{\uvec}{u}
+\newcommand{\fvec}{f}
+\newcommand{\noise}{\varepsilon}
+
+% Proximal and denoiser
+\newcommand{\prox}{\mathrm{prox}}
+\newcommand{\Denoise}{\mathcal{D}}
+\newcommand{\Lips}{L}
+
+% Operators and sets
+\newcommand{\R}{\mathbb{R}}
+\newcommand{\Id}{\mathrm{Id}}
+
+% TODO marker
+\newcommand{\TODO}[1]{\textcolor{red}{[TODO: #1]}}
+
+% ---------- Theorem-like environments ----------
+\theoremstyle{plain}
+\newtheorem{theorem}{Theorem}[section]
+\newtheorem{assumption}{Assumption}[section]
+\newtheorem{proposition}{Proposition}[section]
+\theoremstyle{remark}
+\newtheorem{remark}{Remark}[section]
+\newtheorem{definition}{Definition}[section]
+
+% ============================================================
+\begin{document}
+
+\begin{center}
+{\LARGE \textbf{Plug-and-Play Methods in Inverse Problems: A Review}}\\[0.5em]
+\textbf{TODO: Author(s)}\\
+\textit{TODO: Affiliation(s)}\\
+\texttt{TODO: email@address}
+\end{center}
+
+\vspace{1em}
+
+\section*{Abstract}
+\addcontentsline{toc}{section}{Abstract}
+\noindent
+\textbf{Background:} Plug-and-Play (PnP) methods integrate learned or handcrafted denoisers as implicit regularisers within iterative solvers for inverse problems, enabling strong reconstructions across modalities \cite{kamilov2023pnp_spm,ahmad2020pnp_mri_spm}. \\
+\textbf{Purpose:} This review synthesises core PnP algorithmic families (ADMM, HQS, PGD/ISTA, primal–dual, and sampling-based), clarifies connections to Regularisation by Denoising (RED) \cite{reehorst2019red_tci}, and situates PnP alongside unrolling and diffusion/score-based priors \cite{monga2021unrolling_spm,daras2024diffusion_inverse_survey}. \\
+\textbf{Scope:} We emphasise mathematical structure and convergence assumptions \cite{hauptmann2024convergent_focm,scarlett2022theory_jsait}, denoiser classes (classical, CNN, diffusion), and evaluation protocols, including when uncertainty and interpretability are reported. \\
+\textbf{Conclusions:} PnP offers a modular route to physics-informed reconstruction with competitive performance, yet open challenges remain—guarantees with powerful denoisers, principled parameter–noise calibration, and reproducible, modality-specific benchmarks—which we address via consolidated best practices and a research agenda \cite{habring2024nn_regularization_review}.
+
+
+\section*{Keywords}
+\addcontentsline{toc}{section}{Keywords}
+Plug-and-Play; PnP-ADMM; PnP-HQS; Primal--Dual; RED; Denoising Prior; Learned Regulariser; Diffusion Models; Uncertainty; Inverse Problems; Imaging.
+
+% ============================================================
+\section*{1.\quad Introduction}
+\addcontentsline{toc}{section}{1. Introduction}
+\noindent
+\textbf{Motivation.} Many inverse problems seek
+$$
+\min_{\uvec \in \R^n} \; \E(\uvec) \equiv \tfrac{1}{2}\|\A \uvec - \fvec\|_2^2 + \lambda R(\uvec),
+$$
+where \(R\) enforces prior structure. PnP methods sidestep explicit \(R\) by invoking a denoiser \( \Denoise_{\sigma} \) within an optimisation scheme. \\
+\textbf{Contributions.} \TODO{Enumerate succinct bullets: taxonomy; unifying view; convergence map; benchmark guidance; open problems.} \\
+\textbf{Scope \& Exclusions.} We focus on deterministic PnP optimisation and sampling-based PnP; we summarise but do not exhaustively cover general learned unrolled networks.
+
+\paragraph{Box 1 (Key concepts).}
+\begin{itemize}[leftmargin=2em]
+    \item \textit{Denoiser as prior:} \( \Denoise_{\sigma}: \R^n \to \R^n \) acts as a proximity operator surrogate.
+    \item \textit{Averaged/nonexpansive mappings:} critical for fixed-point convergence.
+    \item \textit{Data-fidelity vs prior steps:} balancing step-sizes and penalty parameters.
+\end{itemize}
+
+% ============================================================
+\section*{2.\quad Mathematical Preliminaries}
+\addcontentsline{toc}{section}{2. Mathematical Preliminaries}
+\noindent
+\textbf{Notation.} \( \A \in \R^{m \times n} \), data \( \fvec \in \R^m \), variable \( \uvec \in \R^n \). Iterates use \( (\cdot)^{(t)} \). \\
+\textbf{Proximal operator.} For \(g:\R^n \to \R \cup \{+\infty\}\),
+$$
+\prox_{\gamma g}(x) = \arg\min_{y} \; g(y) + \tfrac{1}{2\gamma}\|y-x\|_2^2.
+$$
+\textbf{Averaged operators.} \(T\) is \(\alpha\)-averaged if \( T = (1-\alpha)\Id + \alpha S \) for some nonexpansive \(S\), \( \alpha \in (0,1) \). \\
+\textbf{Denoisers.} Classes: bounded, nonexpansive, firmly nonexpansive, Jacobian-symmetric (RED), Lipschitz with constant \(<1\).
+
+% ============================================================
+\section*{3.\quad PnP via Operator Splitting}
+\addcontentsline{toc}{section}{3. PnP via Operator Splitting}
+\noindent
+We consider data term \(g(\uvec) = \tfrac{1}{2}\|\A \uvec - \fvec\|_2^2\). The prior step is realised by a denoiser \( \Denoise_{\sigma} \).
+
+\subsection*{3.1\quad PnP-ADMM}
+\addcontentsline{toc}{subsection}{3.1 PnP-ADMM}
+\noindent
+ADMM variables \(x, v, y\) with penalty \(\rho>0\):
+\begin{align*}
+x^{(t+1)} &:= \arg\min_x \; \tfrac{1}{2}\|\A x - \fvec\|_2^2 + \tfrac{\rho}{2}\|x - v^{(t)} + y^{(t)}\|_2^2, \\
+v^{(t+1)} &:= \Denoise_{\sigma}\!\left(x^{(t+1)} + y^{(t)}\right), \\
+y^{(t+1)} &:= y^{(t)} + x^{(t+1)} - v^{(t+1)}.
+\end{align*}
+\textbf{Comments.} The \(x\)-step is a linear system; use CG or preconditioned solvers. The \(v\)-step is the denoiser call. \(\rho\) and \(\sigma\) must be coordinated.
+
+\begin{algorithm}[h]
+\caption{PnP-ADMM (skeleton)}
+\begin{algorithmic}[1]
+\State \textbf{Input:} \(x^{(0)}, v^{(0)}, y^{(0)}, \rho, \sigma\)
+\For{$t=0,1,2,\dots$}
+    \State $x^{(t+1)} \gets \arg\min_x \; \tfrac{1}{2}\|\A x-\fvec\|_2^2 + \tfrac{\rho}{2}\|x - v^{(t)} + y^{(t)}\|_2^2$
+    \State $v^{(t+1)} \gets \Denoise_{\sigma}\big(x^{(t+1)} + y^{(t)}\big)$
+    \State $y^{(t+1)} \gets y^{(t)} + x^{(t+1)} - v^{(t+1)}$
+    \State \textbf{if} stopping\_rule() \textbf{then break}
+\EndFor
+\State \textbf{Output:} $x^{(t+1)}$
+\end{algorithmic}
+\end{algorithm}
+
+\subsection*{3.2\quad PnP-HQS (Half-Quadratic Splitting)}
+\addcontentsline{toc}{subsection}{3.2 PnP-HQS (Half-Quadratic Splitting)}
+\noindent
+With penalty \(\beta>0\):
+\begin{align*}
+x^{(t+1)} &:= \arg\min_x \; \tfrac{1}{2}\|\A x - \fvec\|_2^2 + \tfrac{\beta}{2}\|x - v^{(t)}\|_2^2, \\
+v^{(t+1)} &:= \Denoise_{\sigma}(x^{(t+1)}).
+\end{align*}
+Often \(\beta\) is increased across iterations (coarse-to-fine prior strength).
+
+\subsection*{3.3\quad PnP-PGD/ISTA}
+\addcontentsline{toc}{subsection}{3.3 PnP-PGD/ISTA}
+\noindent
+With step size \(\tau \in (0,2/\|\A^\top \A\|)\):
+$$
+x^{(t+1)} := \Denoise_{\sigma}\!\left(\, x^{(t)} - \tau \A^\top(\A x^{(t)} - \fvec) \,\right).
+$$
+
+\subsection*{3.4\quad Primal--Dual PnP}
+\addcontentsline{toc}{subsection}{3.4 Primal--Dual PnP}
+\noindent
+Incorporate the denoiser as a proximal surrogate on the primal variable within a Chambolle--Pock style scheme. \TODO{State generic update; specify step-size condition \( \tau \sigma \|\A\|^2 < 1 \).}
+
+% ============================================================
+\section*{4.\quad Regularisation by Denoising (RED)}
+\addcontentsline{toc}{section}{4. Regularisation by Denoising (RED)}
+\noindent
+RED defines an explicit objective through the denoiser:
+$$
+\E_{\mathrm{RED}}(x) = \tfrac{1}{2}\|\A x - \fvec\|_2^2 + \tfrac{\lambda}{2} x^\top \big(x - \Denoise_{\sigma}(x)\big).
+$$
+Under Jacobian-symmetry and certain conditions, \( \nabla \E_{\mathrm{RED}}(x) = \A^\top(\A x - \fvec) + \lambda \big(x - \Denoise_{\sigma}(x)\big) \). \\
+\textbf{Relation to PnP.} \TODO{Discuss when PnP fixed points coincide with RED critical points; highlight differences in assumptions.}
+
+% ============================================================
+\section*{5.\quad Sampling-Based PnP and Score Methods}
+\addcontentsline{toc}{section}{5. Sampling-Based PnP and Score Methods}
+\noindent
+\textbf{PnP-ULA/PPnP:} Use a denoiser in Langevin dynamics for posterior sampling (approximate gradient via Tweedie relation or denoiser residual). \\
+\textbf{Score-based/DM priors:} Replace \(\Denoise\) by a score network \(s_{\theta}(x)\) (diffusion models) within proximal gradient or data-consistency sampling. \\
+\textbf{Uncertainty.} Posterior samples yield pixel-wise intervals and coverage; calibration metrics include ECE and empirical coverage. \TODO{Add definitions if included.}
+
+
+% ============================================================
+\section*{6.\quad Convergence Theory: Assumptions and Guarantees}
+\addcontentsline{toc}{section}{6. Convergence Theory: Assumptions and Guarantees}
+\noindent
+\textbf{Assumption classes.}
+\begin{itemize}[leftmargin=2em]
+    \item \emph{Averaged/nonexpansive denoisers:} ensure fixed-point convergence of operator compositions.
+    \item \emph{Bounded denoisers:} \( \|\Denoise_{\sigma}(x) - x\| \leq C \) stabilises iterates.
+    \item \emph{Lipschitz gradients for data term:} \( \nabla g \) \( \Lips \)-Lipschitz for PGD-style schemes.
+    \item \emph{Jacobian symmetry/PSD (RED):} enables descent interpretations.
+\end{itemize}
+\textbf{Representative results.} \TODO{State a generic theorem template and cite canonical results.}
+
+\begin{assumption}[Nonexpansive denoiser]
+There exists \(L < 1\) such that \( \|\Denoise_{\sigma}(x) - \Denoise_{\sigma}(y)\| \le L \|x-y\| \) for all \(x,y\).
+\end{assumption}
+
+\begin{theorem}[Fixed-point convergence (template)]
+Under Assumption~1 and standard step-size/penalty conditions for the chosen splitting, the PnP operator has at least one fixed point and the iterates \( \{\iter{x}\} \) converge to a fixed point of the composite mapping. \TODO{Insert precise statement for ADMM/HQS/PGD.}
+\end{theorem}
+
+% ============================================================
+\section*{7.\quad Denoiser Taxonomy and Design}
+\addcontentsline{toc}{section}{7. Denoiser Taxonomy and Design}
+\noindent
+\textbf{Classical:} BM3D, NLM. \\
+\textbf{CNN-based:} DnCNN, DRUNet; noise-level conditioning. \\
+\textbf{Diffusion-based:} score models; fast samplers. \\
+\textbf{Constraints:} nonexpansiveness enforcement, spectral normalisation, damping, residual scaling. \\
+\textbf{Domain adaptation:} generic vs domain-trained denoisers; transfer to MRI/CT/PCM.
+
+% ============================================================
+\section*{8.\quad Applications and Benchmarks}
+\addcontentsline{toc}{section}{8. Applications and Benchmarks}
+\noindent
+\textbf{Modalities:} Natural images, MRI, CT, phase retrieval, single-pixel imaging, PCM/LBIC. \\
+\textbf{Data-consistency solvers:} exact vs inexact \(x\)-steps; preconditioners. \\
+\textbf{Metrics:} PSNR/SSIM/LPIPS; wall-clock; memory; stability; for uncertainty, calibration and coverage. \\
+\textbf{Fairness:} same tuning budgets and stopping rules across methods.
+
+\begin{table}[h]
+\centering
+\caption{Comparison template across PnP families and applications.}
+\label{tab:taxonomy}
+\begin{tabular}{@{}llllll@{}}
+\toprule
+Algorithm & Splitting & Denoiser & Convergence Assumptions & $x$-step Solver & Notes \\
+\midrule
+PnP-ADMM & ADMM & \TODO{DRUNet} & Nonexpansive, $\rho$ tuned & CG/PCG & \TODO{} \\
+PnP-HQS & HQS & \TODO{BM3D} & $\beta\uparrow$ schedule & Closed-form/CG & \TODO{} \\
+PnP-PGD & PGD/ISTA & \TODO{DnCNN} & $\tau < 2/\|\A^\top\A\|$ & Grad step & \TODO{} \\
+Primal--Dual & CP & \TODO{RED-like} & $\tau\sigma\|\A\|^2<1$ & Linear ops & \TODO{} \\
+PnP-ULA & Sampling & \TODO{Score} & Step-size anneal & — & Uncertainty \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+% ============================================================
+\section*{9.\quad Practical Guidance and Pitfalls}
+\addcontentsline{toc}{section}{9. Practical Guidance and Pitfalls}
+\noindent
+\textbf{Hyperparameters:} relation between \(\sigma\), penalty \(\rho/\beta\), and noise level. \\
+\textbf{Stopping criteria:} fixed iters vs residual thresholds vs validation-based. \\
+\textbf{Stability:} damping the denoiser, under-relaxation, iterate clipping. \\
+\textbf{Common pitfalls:} unfair baselines, hidden oracle tuning, inconsistent normalisation/crops.
+
+% ============================================================
+\section*{10.\quad Open Problems and Future Directions}
+\addcontentsline{toc}{section}{10. Open Problems and Future Directions}
+\noindent
+\begin{itemize}[leftmargin=2em]
+    \item Convergence with powerful (learned, nonexpansive-violating) denoisers.
+    \item Joint learning of \(\A\)-aware denoisers with guarantees.
+    \item Fast solvers for large-scale \(x\)-steps with structure (e.g., tomography).
+    \item Uncertainty quantification and calibration in PnP pipelines.
+    \item Interpretability of denoiser-induced priors.
+\end{itemize}
+
+% ============================================================
+\section*{11.\quad Methods (Optional: for Systematic/Structured Reviews)}
+\addcontentsline{toc}{section}{11. Methods (Optional)}
+\noindent
+\textbf{Search strategy.} \TODO{Databases, years, strings.} \\
+\textbf{Inclusion/exclusion.} \TODO{PnP focus, reconstruction tasks, metrics.} \\
+\textbf{Extraction schema.} Algorithm family; denoiser; assumptions; solver; metrics; datasets; code. \\
+\textbf{Synthesis.} Narrative by families; no meta-analysis unless metrics align.
+
+% ============================================================
+\section*{12.\quad Reproducibility Checklist}
+\addcontentsline{toc}{section}{12. Reproducibility Checklist}
+\noindent
+\begin{itemize}[leftmargin=2em]
+    \item Release code and configs; fix random seeds.
+    \item Document \(\A\), pre-processing, and normalisation.
+    \item Report iteration budgets, wall-clock, and hardware.
+    \item Provide train/val/test splits and hyperparameter search ranges.
+\end{itemize}
+
+% ============================================================
+\section*{Acknowledgements}
+\addcontentsline{toc}{section}{Acknowledgements}
+\noindent
+\TODO{Funding, collaborators, data providers.}
+
+% ============================================================
+\section*{References}
+\addcontentsline{toc}{section}{References}
+\noindent
+% Use your BibTeX file or manual entries; examples:
+% \begin{thebibliography}{9}
+% \bibitem{Venkatakrishnan2013} S. V. Venkatakrishnan et al., Plug-and-Play Priors for Model Based Reconstruction, 2013.
+% \bibitem{Romano2017} Y. Romano et al., The Little Engine that Could: Regularization by Denoising (RED), 2017.
+% \end{thebibliography}
+
+% ============================================================
+% APPENDICES
+% ============================================================
+\clearpage
+\appendix
+
+\section*{Appendix A:\quad Notation Summary}
+\addcontentsline{toc}{section}{Appendix A: Notation Summary}
+\noindent
+\begin{tabular}{@{}ll@{}}
+\toprule
+Symbol & Meaning \\
+\midrule
+$\A \in \R^{m\times n}$ & Forward operator \\
+$\fvec \in \R^{m}$ & Observed data \\
+$\uvec \in \R^{n}$ & Unknown signal/image \\
+$\Denoise_{\sigma}$ & Denoiser with parameter $\sigma$ \\
+$\rho,\beta,\tau$ & ADMM/HQS/PGD step or penalty parameters \\
+\bottomrule
+\end{tabular}
+
+\section*{Appendix B:\quad Stopping Rules (Templates)}
+\addcontentsline{toc}{section}{Appendix B: Stopping Rules (Templates)}
+\noindent
+\textbf{Relative change:}
+$$
+\frac{\|x^{(t+1)} - x^{(t)}\|_2}{\|x^{(t)}\|_2} < \epsilon.
+$$
+\textbf{Primal/dual residuals (ADMM):} \TODO{Define $r^{(t)}$ and $s^{(t)}$, thresholds, and scaling.}
+
+\section*{Appendix C:\quad Evaluation Metrics}
+\addcontentsline{toc}{section}{Appendix C: Evaluation Metrics}
+\noindent
+\textbf{PSNR:}
+$$
+\mathrm{PSNR} = 10 \log_{10}\!\left(\frac{\mathrm{MAX}^2}{\mathrm{MSE}}\right), \quad
+\mathrm{MSE} = \frac{1}{n}\|\hat{x} - x^\star\|_2^2.
+$$
+\textbf{SSIM/LPIPS:} \TODO{Formulas or references.}
+\textbf{Uncertainty (optional):} Expected calibration error (ECE), coverage vs nominal.
+
+\end{document}
