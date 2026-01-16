@@ -8,5 +8,7 @@
 *.ilg
 *.ind
 *.pdf
+*.nav
+*.snm
 
 .DS_Store

@@ -1,0 +1,89 @@
+% Compile with: pdflatex main.tex
+\documentclass[10pt,aspectratio=169]{beamer}
+
+% --- Theme (simple and readable) ---
+\usetheme{default}
+\usecolortheme{default}
+\setbeamertemplate{navigation symbols}{}
+
+% --- Packages ---
+\usepackage[T1]{fontenc}
+\usepackage[utf8]{inputenc}
+\usepackage{lmodern}
+\usepackage{amsmath,amssymb,mathtools}
+\usepackage{microtype}
+
+% --- Helpful macros (optional) ---
+\newcommand{\R}{\mathbb{R}}
+\newcommand{\norm}[1]{\left\lVert #1 \right\rVert}
+\newcommand{\prox}{\operatorname{prox}}
+
+% --- Title info ---
+\title{Plug-and-Play Reconstruction in 1 Minute}
+\author{ }
+\date{ }
+
+\begin{document}
+
+% Title slide (optional)
+\begin{frame}
+  \titlepage
+\end{frame}
+
+% --- Slide 1 ---
+\begin{frame}{Plug-and-Play (PnP): a denoiser as the ``prior''}
+\small
+\begin{itemize}
+    \item In many imaging problems, the measurement is incomplete and noisy:
+    $$y = A x + \varepsilon.$$
+    \item Many images could explain the same measurements.
+    \item Classical reconstruction chooses an image that balances:
+    \begin{itemize}
+        \item \textbf{data consistency}: match the measurements,
+        \item \textbf{prior knowledge}: prefer ``plausible'' images.
+    \end{itemize}
+\end{itemize}
+
+\vspace{0.2cm}
+\small
+Classical form:
+$$\hat x=\arg\min_x \underbrace{\norm{Ax-y}_2^2}_{\text{match data}}+\underbrace{\lambda R(x)}_{\text{hand-crafted prior}}.$$
+
+\vspace{0.2cm}
+\small
+\textbf{PnP idea:} keep the physics term, but replace the hand-crafted prior step by a powerful \textbf{denoiser} \(D_\sigma\).
+\end{frame}
+
+% --- Slide 2 ---
+\begin{frame}{PnP-ADMM: one simple loop}
+\small
+\textbf{Goal:} combine a forward model \(A\) with a denoiser \(D_\sigma\).
+
+\vspace{0.2cm}
+\textbf{Iterate \(k=0,1,2,\dots\):}
+
+\begin{align*}
+    x^{(k+1)}
+        &=
+        \arg\min_x
+        \frac{1}{2}\norm{A x - y}_2^2
+        +
+        \frac{\rho}{2}\norm{x - \bigl(v^{(k)} - u^{(k)}\bigr)}_2^2
+        \quad \text{(data consistency)} \\[2mm]
+    v^{(k+1)}
+        &=
+        D_\sigma\!\bigl(x^{(k+1)} + u^{(k)}\bigr)
+        \quad \text{(denoise = learned prior)} \\[2mm]
+    u^{(k+1)}
+        &=
+        u^{(k)} + x^{(k+1)} - v^{(k+1)}
+        \quad \text{(make them agree)}
+\end{align*}
+
+
+\vspace{0.2cm}
+\small
+\textbf{Intuition:} alternate between ``fit the measurements'' and ``look like a clean image'', then reconcile the two.
+\end{frame}
+
+\end{document}
