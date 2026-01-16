@@ -1,0 +1,259 @@
+% pcm_forward_model_slides.tex
+\documentclass[aspectratio=169]{beamer}
+
+\setbeamertemplate{headline}{}
+\setbeamertemplate{footline}{}
+\setbeamertemplate{navigation symbols}{}
+
+\usetheme{Madrid}
+\usecolortheme{default}
+
+\usepackage{amsmath,amssymb,bm}
+
+\title{PCM Forward Model Simple}
+\subtitle{Consistent notation for complementary masks and Walsh-Hadamard sensing}
+\author{}
+\date{}
+
+\newcommand{\one}{\mathbf{1}}
+\newcommand{\R}{\mathbb{R}}
+
+\begin{document}
+
+% \begin{frame}
+%   \titlepage
+% \end{frame}
+
+\begin{frame}[plain]%{PCM model notation}
+\begin{itemize}
+  \item Image (current map), vectorised: \(x \in \R^{n}\), where $n$ is the number of pixels.
+  \item Binary mask (illumination pattern) for measurement \(m\): \(b_m \in \{0,1\}^{n}\).
+  \item Complementary mask: \(\bar b_m := \one - b_m\).
+  \item Signed (differential) pattern: \(h_m \in \{+1,-1\}^{n}\) where \(h_m := b_m - \bar b_m\).
+  Each $h_m$ is a vectorised Hadamard/Walsh pattern.
+  $m$ is the index according to coarse-to-fine ordering.
+  \item Sensing matrix: \(H \in \{+1,-1\}^{M\times n}\) with rows \(h_m^\top\):
+  \[
+    H :=
+    \begin{bmatrix}
+    h_1^\top\\
+    \vdots\\
+    h_M^\top
+    \end{bmatrix}
+  \]
+  \item Measurements: \(y \in \R^{M}\), noise: \(e \in \R^{M}\) ($M \leq n$ is the number of measurements taken).
+
+\end{itemize}
+\end{frame}
+
+
+
+\begin{frame}[plain]%{Forward model (Walsh-Hadamard transform)}
+
+Forward model: $y = H x + e$
+
+\vspace{1em}
+
+Separate $H$ into a full Walsh-Hadamard basis $W$,
+a permutation $P$,
+and a row-selector $S$:
+\[
+W \in \{+1,-1\}^{n\times n},\qquad W^\top W = n I,
+\qquad
+H = S P W,
+\]
+where $P \in \{0,1\}^{n\times n}$ reorders the rows from natural ordering to coarse-to-fine ordering
+and \(S \in \{0,1\}^{M\times n}\) selects \(M\) rows.
+
+\vspace{1em}
+
+The forward model becomes: $y = S P W x + e$.
+
+\vspace{1em}
+
+$W x$ can be efficiently computed with the Fast Walsh-Hadamard Transform (FWHT) in \(O(n \log n)\) time.
+
+
+\end{frame}
+
+\begin{frame}[plain]%{Backward model (zero-filled backprojection)}
+% \textbf{Unnormalised Hadamard/Walsh convention} (\(W^\top W = nI\)):
+% \[
+% \text{Full sampling }(M=n,\, H=W):\qquad x = W^{-1}y = \frac{1}{n}W^\top y.
+% \]
+% \[
+% \text{Subsampling }(y = SWx + e):\qquad
+% \hat x_{\mathrm{zf}} := \frac{1}{n} W^\top S^\top y
+% \quad\text{(zero-filled backprojection).}
+% \]
+
+\begin{aligned}
+\text{With full sampling }(M=n,\, H=PW)&:\quad x = W^{-1}P^{-1}y = \frac{1}{n}W^\top P^\top y.
+\\
+\text{With subsampling }(M < n, \, H=SPW)&:\quad
+\hat x := \frac{1}{n} W^\top P^\top y_{\mathrm{zero-filled}}
+\quad\text{(zero-filled backprojection).}
+\end{aligned}
+
+\vspace{1em}
+
+where \(y_{\mathrm{zero-filled}} := S^\top y \in \R^{n}\)
+is the zero-filled measurement vector upscaled to length \(n\) (by inserting zeros in the unmeasured entries),
+which is then
+reordered from coarse-to-fine ordering back to natural ordering by \(P^\top\).
+
+\vspace{1em}
+
+Since $W$ is symmetric ($W^\top = W$), we can use fast WHT for both forward and backward transforms.
+
+% \vspace{0.8em}
+% \textbf{Normalised convention} \(\tilde W := \frac{1}{\sqrt{n}}W\) so that \(\tilde W^\top \tilde W = I\):
+% \[
+% \text{Full sampling:}\qquad x = \tilde W^\top y,
+% \qquad
+% \text{Zero-filled:}\qquad \hat x_{\mathrm{zf}} = \tilde W^\top S^\top y.
+% \]
+\end{frame}
+
+
+% --- Slide 1 ---
+\begin{frame}[plain]%{Plug-and-Play (PnP): a denoiser as the ``prior''}
+\small
+\begin{itemize}
+    \item In many imaging problems, the measurement is incomplete and noisy:
+    $$y = A x + \varepsilon.$$
+    \item Many images could explain the same measurements.
+    \item Classical reconstruction chooses an image that balances:
+    \begin{itemize}
+        \item \textbf{data consistency}: match the measurements,
+        \item \textbf{prior knowledge}: prefer ``plausible'' images.
+    \end{itemize}
+\end{itemize}
+
+\vspace{0.2cm}
+\small
+Classical form:
+$$\hat x=\arg\min_x \underbrace{\norm{Ax-y}_2^2}_{\text{match data}}+\underbrace{\lambda R(x)}_{\text{hand-crafted prior}}.$$
+
+\vspace{0.2cm}
+\small
+\textbf{PnP idea:} keep the physics term, but replace the hand-crafted prior step by a powerful \textbf{denoiser} \(D_\sigma\).
+\end{frame}
+
+% --- Slide 2 ---
+\begin{frame}[plain]%{PnP-ADMM: one simple loop}
+\small
+\textbf{Goal:} combine a forward model \(A\) with a denoiser \(D_\sigma\).
+
+\vspace{0.2cm}
+\textbf{Iterate \(k=0,1,2,\dots\):}
+
+\begin{align*}
+    x^{(k+1)}
+        &=
+        \arg\min_x
+        \frac{1}{2}\norm{A x - y}_2^2
+        +
+        \frac{\rho}{2}\norm{x - \bigl(v^{(k)} - u^{(k)}\bigr)}_2^2
+        \quad \text{(data consistency)} \\[2mm]
+    v^{(k+1)}
+        &=
+        D_\sigma\!\bigl(x^{(k+1)} + u^{(k)}\bigr)
+        \quad \text{(denoise = learned prior)} \\[2mm]
+    u^{(k+1)}
+        &=
+        u^{(k)} + x^{(k+1)} - v^{(k+1)}
+        \quad \text{(make them agree)}
+\end{align*}
+
+
+\vspace{0.2cm}
+\small
+\textbf{Intuition:} alternate between ``fit the measurements'' and ``look like a clean image'', then reconcile the two.
+\end{frame}
+
+\begin{frame}[plain]%{PnP-ADMM: one simple loop}
+    \small
+    \textbf{Goal:} combine a forward model \(A\) with a denoiser \(D_\sigma\).
+
+    \vspace{0.2cm}
+    \textbf{Iterate \(k = 0, 1, 2, \dots\):}
+    \begin{align*}
+        x^{(k+1)}
+            &=
+            \arg\min_x
+            \frac{1}{2}\norm{A x - y}_2^2
+            +
+            \frac{\rho}{2}\norm{x - \bigl(v^{(k)} - u^{(k)}\bigr)}_2^2
+            \quad \text{(data consistency)} \\[1mm]
+            &\Longleftrightarrow
+            \bigl(A^\top A + \rho I\bigr) x^{(k+1)}
+            =
+            A^\top y + \rho \bigl(v^{(k)} - u^{(k)}\bigr)
+            \quad \text{(linear system)} \\[2mm]
+        v^{(k+1)}
+            &=
+            D_\sigma\!\bigl(x^{(k+1)} + u^{(k)}\bigr)
+            \quad \text{(denoise = learned prior)} \\[2mm]
+        u^{(k+1)}
+            &=
+            u^{(k)} + x^{(k+1)} - v^{(k+1)}
+            \quad \text{(make them agree)}
+    \end{align*}
+
+    \vspace{-0.1cm}
+    \small
+    \textbf{Implementation note:} for large-scale problems, solve the \(x\)-update with conjugate gradients (CG),
+    using matrix-vector products with \(A\) and \(A^\top\).
+\end{frame}
+
+
+\begin{frame}[plain]%{Hyper-parameter \(\rho\) (sometimes written \(\eta\))}
+    \small
+    The \(x\)-update balances data-fit and staying close to the denoised estimate:
+    $$
+        x^{(k+1)}
+        =
+        \arg\min_x
+        \frac{1}{2}\norm{A x - y}_2^2
+        +
+        \frac{\rho}{2}\norm{x - \bigl(v^{(k)} - u^{(k)}\bigr)}_2^2.
+    $$
+
+    \vspace{0.1cm}
+    \begin{itemize}
+        \item \textbf{Large \(\rho\):} forces \(x^{(k+1)} \approx v^{(k)} - u^{(k)}\)
+              \(\rightarrow\) follows the denoiser more strongly \(\rightarrow\) smoother images.
+              If too large, can wash out real details.
+        \item \textbf{Small \(\rho\):} prioritises matching \(y\)
+              \(\rightarrow\) lower measurement mismatch.
+              If too small, can leave more noise / undersampling artifacts.
+    \end{itemize}
+
+    \vspace{0.1cm}
+    \small
+    In practice, tune \(\rho\) together with the denoiser strength \(\sigma\).
+\end{frame}
+
+\begin{frame}[plain]%{Temp}
+
+Matrix $W$ (natural ordering)
+
+$P W$ (coarse-to-fine ordering)
+
+Pattern $m$ is the matrix view of row $m$
+
+$S P W$ (subsampling)
+
+Real measurement data.
+To compute each value $y_m$,
+
+two measurements $b_m^\top y$ and $\bar b_m^\top y$
+(positive and negative masks)
+are taken.
+
+\end{frame}
+
+
+
+\end{document}

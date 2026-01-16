@@ -11,4 +11,7 @@
 *.nav
 *.snm
 
+*.png
+*.svg
+
 .DS_Store
