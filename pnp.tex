@@ -86,4 +86,68 @@ $$\hat x=\arg\min_x \underbrace{\norm{Ax-y}_2^2}_{\text{match data}}+\underbrace
 \textbf{Intuition:} alternate between ``fit the measurements'' and ``look like a clean image'', then reconcile the two.
 \end{frame}
 
+\begin{frame}{PnP-ADMM: one simple loop}
+    \small
+    \textbf{Goal:} combine a forward model \(A\) with a denoiser \(D_\sigma\).
+
+    \vspace{0.2cm}
+    \textbf{Iterate \(k = 0, 1, 2, \dots\):}
+    \begin{align*}
+        x^{(k+1)}
+            &=
+            \arg\min_x
+            \frac{1}{2}\norm{A x - y}_2^2
+            +
+            \frac{\rho}{2}\norm{x - \bigl(v^{(k)} - u^{(k)}\bigr)}_2^2
+            \quad \text{(data consistency)} \\[1mm]
+            &\Longleftrightarrow
+            \bigl(A^\top A + \rho I\bigr) x^{(k+1)}
+            =
+            A^\top y + \rho \bigl(v^{(k)} - u^{(k)}\bigr)
+            \quad \text{(linear system)} \\[2mm]
+        v^{(k+1)}
+            &=
+            D_\sigma\!\bigl(x^{(k+1)} + u^{(k)}\bigr)
+            \quad \text{(denoise = learned prior)} \\[2mm]
+        u^{(k+1)}
+            &=
+            u^{(k)} + x^{(k+1)} - v^{(k+1)}
+            \quad \text{(make them agree)}
+    \end{align*}
+
+    \vspace{-0.1cm}
+    \small
+    \textbf{Implementation note:} for large-scale problems, solve the \(x\)-update with conjugate gradients (CG),
+    using matrix-vector products with \(A\) and \(A^\top\).
+\end{frame}
+
+
+\begin{frame}{Hyper-parameter \(\rho\) (sometimes written \(\eta\))}
+    \small
+    The \(x\)-update balances data-fit and staying close to the denoised estimate:
+    $$
+        x^{(k+1)}
+        =
+        \arg\min_x
+        \frac{1}{2}\norm{A x - y}_2^2
+        +
+        \frac{\rho}{2}\norm{x - \bigl(v^{(k)} - u^{(k)}\bigr)}_2^2.
+    $$
+
+    \vspace{0.1cm}
+    \begin{itemize}
+        \item \textbf{Large \(\rho\):} forces \(x^{(k+1)} \approx v^{(k)} - u^{(k)}\)
+              \(\rightarrow\) follows the denoiser more strongly \(\rightarrow\) smoother images.
+              If too large, can wash out real details.
+        \item \textbf{Small \(\rho\):} prioritises matching \(y\)
+              \(\rightarrow\) lower measurement mismatch.
+              If too small, can leave more noise / undersampling artifacts.
+    \end{itemize}
+
+    \vspace{0.1cm}
+    \small
+    In practice, tune \(\rho\) together with the denoiser strength \(\sigma\).
+\end{frame}
+
+
 \end{document}
