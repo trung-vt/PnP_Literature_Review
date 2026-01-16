@@ -1,0 +1,98 @@
+% pcm_forward_model_slides.tex
+\documentclass[aspectratio=169]{beamer}
+
+\usetheme{Madrid}
+\usecolortheme{default}
+
+\usepackage{amsmath,amssymb,bm}
+
+\title{PCM Forward Model}
+\subtitle{Consistent notation for complementary masks and Walsh-Hadamard sensing}
+\author{}
+\date{}
+
+\newcommand{\one}{\mathbf{1}}
+\newcommand{\R}{\mathbb{R}}
+
+\begin{document}
+
+\begin{frame}
+  \titlepage
+\end{frame}
+
+\begin{frame}{Notation (consistent across slides)}
+\begin{itemize}
+  \item Image (current map), vectorised: \(x \in \R^{n}\), where \(n = N_{\mathrm{pix}}\).
+  \item Measurements: \(y \in \R^{M}\), noise: \(e \in \R^{M}\).
+  \item Binary mask (illumination pattern) for measurement \(m\): \(b_m \in \{0,1\}^{n}\).
+  \item Complementary mask: \(\bar b_m := \one - b_m\).
+  \item Signed (differential) pattern: \(h_m := 2b_m - \one \in \{+1,-1\}^{n}\).
+  \item Sensing matrix: \(H \in \{+1,-1\}^{M\times n}\) with rows \(h_m^\top\).
+\end{itemize}
+\end{frame}
+
+\begin{frame}{Single measurement: complementary masks \(\to\) signed sensing}
+\[
+\begin{aligned}
+y_m^{+} &= \sum_{i=1}^{n} (b_m)_i\, x_i + \eta_m^{+},\\
+y_m^{-} &= \sum_{i=1}^{n} (1-(b_m)_i)\, x_i + \eta_m^{-}.
+\end{aligned}
+\]
+Define the differential measurement \(y_m := y_m^{+}-y_m^{-}\). Then
+\[
+\begin{aligned}
+y_m
+&= \sum_{i=1}^{n} \bigl( (b_m)_i - (1-(b_m)_i) \bigr)\, x_i \;+\; (\eta_m^{+}-\eta_m^{-})\\
+&= \sum_{i=1}^{n} \bigl(2(b_m)_i-1\bigr)\, x_i \;+\; e_m
+= h_m^\top x + e_m.
+\end{aligned}
+\]
+\end{frame}
+
+\begin{frame}{Matrix form (including subsampling)}
+Stack measurements:
+\[
+y = Hx + e,
+\qquad
+H :=
+\begin{bmatrix}
+h_1^\top\\
+\vdots\\
+h_M^\top
+\end{bmatrix}
+\in \{+1,-1\}^{M\times n}.
+\]
+
+Optional: separate a full Walsh-Hadamard basis and a row-selector:
+\[
+W \in \{+1,-1\}^{n\times n},\qquad W^\top W = n I,
+\qquad
+H = S W,
+\]
+where \(S \in \{0,1\}^{M\times n}\) selects \(M\) rows of \(W\) (subsampling).
+
+\vspace{0.4em}
+Coarse-to-fine ordering can be described as a particular deterministic choice of the selected rows (and their order).
+\end{frame}
+
+\begin{frame}{Reconstruction formulas (pick one normalisation and keep it)}
+\textbf{Unnormalised Hadamard/Walsh convention} (\(W^\top W = nI\)):
+\[
+\text{Full sampling }(M=n,\, H=W):\qquad x = W^{-1}y = \frac{1}{n}W^\top y.
+\]
+\[
+\text{Subsampling }(y = SWx + e):\qquad
+\hat x_{\mathrm{zf}} := \frac{1}{n} W^\top S^\top y
+\quad\text{(zero-filled backprojection).}
+\]
+
+\vspace{0.8em}
+\textbf{Normalised convention} \(\tilde W := \frac{1}{\sqrt{n}}W\) so that \(\tilde W^\top \tilde W = I\):
+\[
+\text{Full sampling:}\qquad x = \tilde W^\top y,
+\qquad
+\text{Zero-filled:}\qquad \hat x_{\mathrm{zf}} = \tilde W^\top S^\top y.
+\]
+\end{frame}
+
+\end{document}
