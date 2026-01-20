@@ -9,6 +9,7 @@
 \usecolortheme{default}
 
 \usepackage{amsmath,amssymb,bm}
+\usepackage{cancel}
 
 \title{PCM Forward Model Simple}
 \subtitle{Consistent notation for complementary masks and Walsh-Hadamard sensing}
@@ -20,9 +21,9 @@
 
 \begin{document}
 
-% \begin{frame}
-%   \titlepage
-% \end{frame}
+\begin{frame}
+  \titlepage
+\end{frame}
 
 \begin{frame}[plain]%{PCM model notation}
 \begin{itemize}
@@ -34,7 +35,7 @@
   $m$ is the index according to coarse-to-fine ordering.
   \item Sensing matrix: \(H \in \{+1,-1\}^{M\times n}\) with rows \(h_m^\top\):
   \[
-    H :=
+    H =
     \begin{bmatrix}
     h_1^\top\\
     \vdots\\
@@ -46,6 +47,35 @@
 \end{itemize}
 \end{frame}
 
+
+
+\begin{frame}[plain]%{Forward model (Walsh-Hadamard transform)}
+
+Forward model: $y = H x + e$
+
+\vspace{1em}
+
+Separate $H$ into $S P W$:
+
+\vspace{0.5em}
+
+\begin{itemize}
+\item $W \in \{+1,-1\}^{n\times n}$
+is the full Walsh-Hadamard basis (unnormalised, \(W^\top W = n I\)).
+Compute $W x$ efficiently with Fast Walsh-Hadamard Transform (FWHT).
+\vspace{0.5em}
+
+\item $P \in \{0,1\}^{n\times n}$ reorders the rows from natural ordering to coarse-to-fine ordering.
+\vspace{0.5em}
+
+\item \(S \in \{0,1\}^{M\times n}\) selects \(M\) rows (subsampling).
+\end{itemize}
+
+\vspace{1em}
+
+The forward model becomes: $y = S P W x + e$.
+
+\end{frame}
 
 
 \begin{frame}[plain]%{Forward model (Walsh-Hadamard transform)}
@@ -116,6 +146,48 @@ Since $W$ is symmetric ($W^\top = W$), we can use fast WHT for both forward and 
 \end{frame}
 
 
+\end{frame}
+
+\begin{frame}[plain]%{Backward model (zero-filled backprojection)}
+% \textbf{Unnormalised Hadamard/Walsh convention} (\(W^\top W = nI\)):
+% \[
+% \text{Full sampling }(M=n,\, H=W):\qquad x = W^{-1}y = \frac{1}{n}W^\top y.
+% \]
+% \[
+% \text{Subsampling }(y = SWx + e):\qquad
+% \hat x_{\mathrm{zf}} := \frac{1}{n} W^\top S^\top y
+% \quad\text{(zero-filled backprojection).}
+% \]
+
+\begin{aligned}
+\text{Full sampling }(M=n,\, H=PW)&:\quad x = W^{-1}P^{-1}y = \frac{1}{n}W^\top P^\top y.
+\\
+\text{Subsampling }(M < n, \, H=SPW)&:\quad
+\hat x = \frac{1}{n} W^\top P^\top y_{\mathrm{zero-filled}}
+\quad\text{(zero-filled backprojection).}
+\end{aligned}
+
+\vspace{1em}
+
+where \(y_{\mathrm{zero-filled}} = S^\top y \in \R^{n}\)
+is the zero-filled measurement vector upscaled to length \(n\) (by inserting zeros in the unmeasured entries),
+which is then
+reordered from coarse-to-fine ordering back to natural ordering by \(P^\top\).
+
+\vspace{1em}
+
+Since $W^\top = W$, we also use FWHT to compute backprojection efficiently.
+
+% \vspace{0.8em}
+% \textbf{Normalised convention} \(\tilde W := \frac{1}{\sqrt{n}}W\) so that \(\tilde W^\top \tilde W = I\):
+% \[
+% \text{Full sampling:}\qquad x = \tilde W^\top y,
+% \qquad
+% \text{Zero-filled:}\qquad \hat x_{\mathrm{zf}} = \tilde W^\top S^\top y.
+% \]
+\end{frame}
+
+
 % --- Slide 1 ---
 \begin{frame}[plain]%{Plug-and-Play (PnP): a denoiser as the ``prior''}
 \small
@@ -133,7 +205,7 @@ Since $W$ is symmetric ($W^\top = W$), we can use fast WHT for both forward and 
 \vspace{0.2cm}
 \small
 Classical form:
-$$\hat x=\arg\min_x \underbrace{\norm{Ax-y}_2^2}_{\text{match data}}+\underbrace{\lambda R(x)}_{\text{hand-crafted prior}}.$$
+$$\hat x=\arg\min_x \underbrace{\|Ax-y\|_2^2}_{\text{match data}}+\underbrace{\lambda R(x)}_{\text{hand-crafted prior}}.$$
 
 \vspace{0.2cm}
 \small
@@ -254,6 +326,402 @@ are taken.
 
 \end{frame}
 
+
+\begin{frame}[plain]%{Compressed Sensing: SPGL1}
+
+    \small
+    Follow the method in
+    "Toward Megapixel Resolution Compressed Sensing Current Mapping of Photovoltaic Devices Using Digital Light Processing"
+    (Koutsourakis, Thompson, Blakesley), which can be summarised as follows:
+
+    \vspace{2mm}
+    \begin{itemize}
+        \item Use 2D periodised orthogonal Daubechies wavelets (Daubechies D4).
+              Seek a solution that is sparse in this wavelet domain.
+        \item Using the \(\ell_1\) norm to encourage sparsity, solve the Basis Pursuit problem:
+              \[
+                  \min_{w \in \mathbb{R}^n} \norm{w}_1
+                  \quad \text{subject to} \quad
+                  y = \Phi \Psi^{-1} w,
+              \]
+              where \(w = \Psi x\) are wavelet coefficients of the image \(x\) (photocurrent map),
+              and \(\Phi\) is the subsampling operator.
+        \item Solve the BP problem using the SPGL1 algorithm.
+        \item Apply a postprocessing step (debiasing, GPSR) to correct the tendency of \(\ell_1\) methods
+              to shrink wavelet coefficients.
+    \end{itemize}
+
+    \vspace{1mm}
+    \footnotesize
+    Implementation: Python, using FWHT for the forward operator and an SPGL1 library.
+\end{frame}
+
+
+\begin{frame}[plain]%{Compressed Sensing Basis Pursuit (A1.1.3)}
+    \small
+
+    \vspace{-1mm}
+    \begin{center}
+        $$
+            \min_{w \in \mathbb{R}^n} \ \|w\|_1
+            \qquad \text{subject to} \qquad
+            y = \Phi \Psi^{-1} w
+        $$
+    \end{center}
+
+    \vspace{1mm}
+    \begin{itemize}
+        % \item Regulariser is \(\ell_1\)-norm (sparsity-promoting norm).
+        \item \(\ell_1\)-norm promotes sparsity
+        \item \(\Psi\) is a (Daubechies) wavelet transform:
+              \(w = \Psi x\) % and \(x = \Psi^{-1} w\).
+        \item \(\Phi\) is the forward operator % (often includes subsampling).
+        \item Algorithm used to solve BP: SPGL1 (spectral projected-gradient \(\ell_1\))
+    \end{itemize}
+
+    \vfill
+    \footnotesize
+    \textit{Toward Megapixel Resolution Compressed Sensing Current Mapping of Photovoltaic Devices Using Digital Light Processing},
+    George Koutsourakis, Andrew Thompson, and James C.\ Blakesley.
+\end{frame}
+
+
+
+
+\begin{frame}[plain]%{Compressed Sensing Basis Pursuit (A1.1.3)}
+    Solve an optimization problem whose solution is constrained to be sparse in wavelet domain:
+    % \small
+
+    \vspace{-2em}
+
+    \begin{center}
+        $$
+            \qquad \qquad
+            \min_{w \in \mathbb{R}^n} \ \|w\|_1
+            \qquad \text{subject to} \quad y = H \Psi^{-1} w
+        $$
+    \end{center}
+
+    \vspace{1mm}
+    \begin{itemize}
+        % \item Regulariser is \(\ell_1\)-norm (sparsity-promoting norm).
+        \item \(\ell_1\)-norm promotes sparsity
+        \item $\Psi \in \mathbb{R}^{n \times n}$ is a (Daubechies) wavelet transform:
+              \(w = \Psi x\) % and \(x = \Psi^{-1} w\).
+        % \item \(\Phi\) is the forward operator % (often includes subsampling).
+        \item Algorithm used to solve BP: SPGL1 (spectral projected-gradient l1)
+    \end{itemize}
+
+    \vfill
+    \footnotesize
+    \textit{Toward Megapixel Resolution Compressed Sensing Current Mapping of Photovoltaic Devices Using Digital Light Processing},
+    George Koutsourakis, Andrew Thompson, and James C.\ Blakesley.
+\end{frame}
+
+
+\begin{frame}[plain]%{Learned Regularisation and Plug-and-Play (A1.1.3)}
+    % \small
+
+\textbf{Variational method:}
+\[
+    \hat{x}
+    =
+    \arg\min_{x}
+    \mathcal{D}\bigl(A(x), y\bigr) + \mathcal{R}(x)
+\]
+
+\begin{itemize}
+    \item \(\mathcal{D}\) is a data-fidelity term (how well \(A(x)\) matches the measurements \(y\)).
+    \item \(\mathcal{R}\) is a regulariser (prior knowledge about \(x\)).
+\end{itemize}
+
+\vspace{2em}
+
+\textbf{Learned regulariser:}
+\(\mathcal{R}(x)\) is
+% a scalar-valued function parameterised by
+a neural network,
+with parameters learned from data.
+
+% Here, the regulariser \(\mathcal{R}\) is explicit and known once the network is trained.
+
+
+
+    % \vspace{1mm}
+    % \begin{itemize}
+    %     \item \textbf{Learned regulariser:}
+    %           \(\mathcal{R}(x)\) is a deep neural network and its parameters are learned
+    %           (explicit regulariser).
+    %     \item \textbf{Plug-and-Play:}
+    %           learn a denoiser \(D\) and use it as a replacement for the proximal operator
+    %           of \(\mathcal{R}\) (inside some algorithm).
+    %     % \item In PnP, \(\mathcal{R}\) may be unknown explicitly (implicit regulariser).
+    %     % \item Denoiser \(D\) is often used off-the-shelf (pretrained).
+    % \end{itemize}
+\end{frame}
+
+
+\begin{frame}[plain]
+One ADMM iteration (scaled form) for:  $\min_x f(x) + g(v)  \qquad  \text{s.t.} \quad x = v$
+
+\begin{align*}
+    x^{(k+1)}
+        &=
+        \arg\min_x
+        f(x)
+        +
+        \frac{\rho}{2}\left\|x - v^{(k)} + u^{(k)}\right\|_2^2 \\[2mm]
+    v^{(k+1)}
+        &=
+        \arg\min_v
+        g(v)
+        +
+        \frac{\rho}{2}\left\|x^{(k+1)} - v + u^{(k)}\right\|_2^2 \\[2mm]
+    u^{(k+1)}
+        &=
+        u^{(k)} + x^{(k+1)} - v^{(k+1)}
+\end{align*}
+\end{frame}
+
+
+
+\begin{frame}[plain]
+ADMM for  $\min_x \mathcal{D}(A(x),y) + \lambda R(x)$
+
+\begin{align*}
+    x^{(k+1)}
+        &=
+        \arg\min_x
+        \mathcal{D}\bigl(A(x), y\bigr)
+        +
+        \frac{\rho}{2}
+        \left\|x - v^{(k)} + u^{(k)}\right\|_2^2
+        \\[2mm]
+    v^{(k+1)}
+        &=
+        \arg\min_v
+        \lambda R(v)
+        +
+        \frac{\rho}{2}
+        \left\|x^{(k+1)} - v + u^{(k)}\right\|_2^2
+        \\[2mm]
+    u^{(k+1)}
+        &=
+        u^{(k)} + x^{(k+1)} - v^{(k+1)}
+\end{align*}
+
+\end{frame}
+
+
+
+\begin{frame}[plain]
+ADMM for $\min_x \mathcal{D}(A(x),y) + \mathcal{R}(x)$
+
+\vspace{1em}
+
+\textbf{Iterate \(k=0,1,2,\dots\):}
+\vspace{-1em}
+\begin{align*}
+    x^{(k+1)}
+        &=
+        \arg\min_x
+        \rho
+        \left\|x - v^{(k)} + u^{(k)}\right\|_2^2
+        +
+        \mathcal{D}(A(x),y)
+        \\
+    v^{(k+1)}
+        &=
+        \arg\min_v
+        \rho
+        % \left\|x^{(k+1)} - v + u^{(k)}\right\|_2^2
+        \left\|v - (x^{(k+1)} + u^{(k)}) \right\|_2^2
+        +
+        \mathcal{R}(v)
+        \\
+    u^{(k+1)}
+        &=
+        u^{(k)} + x^{(k+1)} - v^{(k+1)}
+\end{align*}
+
+If we have a denoiser that solves
+$
+    D_\sigma(z)
+    =
+    \arg\min_{v}
+    \left\|v - z\right\|_2^2
+    +
+    \frac{1}{\rho}
+    \mathcal{R}(v)
+$
+
+\vspace{0.5em}
+
+then we can replace the \(v\)-update by a denoising step
+
+\vspace{-0.5em}
+
+\[
+\hspace{-10em}
+v^{(k+1)}
+=
+D_\sigma\bigl(x^{(k+1)} + u^{(k)}\bigr)
+\]
+
+
+and obtain PnP-ADMM.
+
+\end{frame}
+
+\begin{frame}[plain]
+ADMM for $\min_x \mathcal{D}(A(x),y) + \mathcal{R}(x)$:
+
+\vspace{0.5em}
+\textbf{Iterate \(k=0,1,2,\dots\):}
+\vspace{-0.8em}
+\begin{align*}
+    x^{(k+1)}
+        &=
+        \arg\min_x
+        \frac{\rho}{2}
+        \left\|x - v^{(k)} + u^{(k)}\right\|_2^2
+        +
+        \mathcal{D}(A(x),y)
+        \\
+    v^{(k+1)}
+        &=
+        \arg\min_v
+        \frac{\rho}{2}
+        \left\|v - (x^{(k+1)} + u^{(k)}) \right\|_2^2
+        +
+        \mathcal{R}(v)
+        \\
+    u^{(k+1)}
+        &=
+        u^{(k)} + x^{(k+1)} - v^{(k+1)} .
+\end{align*}
+
+\vspace{0.3em}
+The \(v\)-update is a proximal step:
+\[
+    v^{(k+1)}
+    =
+    \mathrm{prox}_{(1/\rho)\mathcal{R}}\bigl(x^{(k+1)} + u^{(k)}\bigr).
+\]
+
+\vspace{0.3em}
+\textbf{PnP-ADMM:} replace the
+proximal operator
+by a denoiser \(D_\sigma\)
+\[
+\hspace{-10em}
+    v^{(k+1)}
+    =
+    D_\sigma\bigl(x^{(k+1)} + u^{(k)}\bigr).
+\]
+
+
+\end{frame}
+
+\begin{frame}[plain]
+ADMM for the inverse problem $\min_x \mathcal{D}(A(x),y) + \mathcal{R}(x)$
+
+\vspace{0.8em}
+\textbf{Iterate \(k=0,1,2,\dots\):}
+\vspace{-0.8em}
+\begin{align*}
+    x^{(k+1)}
+        &=
+        \arg\min_x
+        \frac{\rho}{2}
+        \left\|x - v^{(k)} + u^{(k)}\right\|_2^2
+        +
+        \mathcal{D}(A(x),y)
+        \\[1mm]
+    v^{(k+1)}
+        &=
+        \arg\min_v
+        \frac{\rho}{2}
+        \left\|v - (x^{(k+1)} + u^{(k)}) \right\|_2^2
+        +
+        \mathcal{R}(v)
+        \\[1mm]
+    u^{(k+1)}
+        &=
+        u^{(k)} + x^{(k+1)} - v^{(k+1)}
+\end{align*}
+
+
+Classical ADMM: choose a splitting so that the \(v\)-update is ``easy''.
+This can restrict which priors or regularisers are practical to use.
+
+
+% In classical ADMM, the splitting is chosen so the
+% v-update has a closed-form or efficiently solvable optimisation step. This can restrict which priors or regularisers are practical to use.
+\end{frame}
+
+\begin{frame}[plain]
+
+The \(v\)-update has the form of a denoising problem:
+\[
+    \hat{v} = \arg\min_v
+    \frac{1}{2}\left\|v - z\right\|_2^2
+    +
+    \frac{1}{\rho}\mathcal{R}(v),
+    \qquad
+    (\text{where } z = x^{(k+1)} + u^{(k)})
+\]
+% \vspace{1em}
+
+\textbf{Plug-and-Play}: replace the explicit regulariser \(\mathcal{R}(x)\)
+by a denoiser \(D_\sigma\):
+% \[
+%     v^{(k+1)}
+%     =
+%     D_\sigma\bigl(x^{(k+1)} + u^{(k)}\bigr).
+% \]
+\begin{align*}
+    v^{(k+1)}
+        &=
+        \arg\min_v
+        \frac{\rho}{2}
+        \left\|v - (x^{(k+1)} + u^{(k)}) \right\|_2^2
+        +
+        \mathcal{R}(v)
+    \\[1mm]
+    v^{(k+1)}
+        &=
+        D_\sigma\bigl(x^{(k+1)} + u^{(k)}\bigr)
+\end{align*}
+
+
+% \textbf{Implicit regularisation (PnP):}
+% replace the explicit penalty \(\mathcal{R}(x)\) by a denoiser \(D_\sigma\).
+
+% \[
+%     \hat{x}
+%     \in
+%     \arg\min_x
+%     \mathcal{D}(A(x),y) + \lambda \mathcal{R}(x)
+%     \qquad
+%     \longrightarrow
+%     \qquad
+%     \text{iterate: data consistency + denoising.}
+% \]
+
+% \small
+The regulariser is \textit{implicit}
+% : it is not written as a closed-form \(\mathcal{R}\),
+% but is
+and is
+encoded by \(D_\sigma\).
+
+
+\end{frame}
+
+\begin{frame}
+Thank you!
+\end{frame}
 
 
 \end{document}
