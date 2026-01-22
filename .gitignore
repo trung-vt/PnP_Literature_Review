@@ -10,6 +10,9 @@
 *.pdf
 *.nav
 *.snm
+*.fls
+*.fdb_latexmk
+*.synctex.gz
 
 *.png
 *.svg
