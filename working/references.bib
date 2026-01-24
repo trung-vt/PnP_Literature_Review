@@ -55,17 +55,31 @@
 }
 
 @article{buzzard2018ce,
-  author  = {Buzzard, Gregery T. and Chan, Stanley H. and Sreehari, Suhas and Bouman, Charles A.},
-  title   = {Plug-and-Play Unplugged: Optimization-Free Reconstruction Using Consensus Equilibrium},
-  journal = {SIAM Journal on Imaging Sciences},
-  year    = {2018},
-  volume  = {11},
-  number  = {3},
-  pages   = {2001--2020},
-  doi     = {10.1137/17M1122451},
-  eprint  = {1705.08983},
-  archivePrefix = {arXiv},
-  primaryClass  = {cs.CV}
+author = {Buzzard, Gregery T. and Chan, Stanley H. and Sreehari, Suhas and Bouman, Charles A.},
+title = {Plug-and-Play Unplugged: Optimization-Free Reconstruction Using Consensus Equilibrium},
+journal = {SIAM Journal on Imaging Sciences},
+volume = {11},
+number = {3},
+pages = {2001-2020},
+year = {2018},
+doi = {10.1137/17M1122451},
+
+URL = {
+
+        https://doi.org/10.1137/17M1122451
+
+
+
+},
+eprint = {
+
+        https://doi.org/10.1137/17M1122451
+
+
+
+}
+,
+    abstract = { Regularized inversion methods for image reconstruction are used widely due to their tractability and their ability to combine complex physical sensor models with useful regularity criteria. Such methods motivated the recently developed Plug-and-Play prior method, which provides a framework to use advanced denoising algorithms as regularizers in inversion. However, the need to formulate regularized inversion as the solution to an optimization problem limits the expressiveness of possible regularity conditions and physical sensor models. In this paper, we introduce the idea of consensus equilibrium (CE), which generalizes regularized inversion to include a much wider variety of both forward (or data fidelity) components and prior (or regularity) components without the need for either to be expressed using a cost function. CE is based on the solution of a set of equilibrium equations that balance data fit and regularity. In this framework, the problem of MAP estimation in regularized inversion is replaced by the problem of solving these equilibrium equations, which can be approached in multiple ways. The key contribution of CE is to provide a novel framework for fusing multiple heterogeneous models of physical sensors or models learned from data. We describe the derivation of the CE equations and prove that the solution of the CE equations generalizes the standard MAP estimate under appropriate circumstances. We also discuss algorithms for solving the CE equations, including a version of the Douglas--Rachford/alternating direction method of multipliers algorithm with a novel form of preconditioning and Newton's method, both standard form and a Jacobian-free form using Krylov subspaces. We give several examples to illustrate the idea of CE and the convergence properties of these algorithms and demonstrate this method on some toy problems and on a denoising example in which we use an array of convolutional neural network denoisers, none of which is tuned to match the noise level in a noisy image but which in consensus can achieve a better result than any of them individually. }
 }
 
 @inproceedings{ryu2019icml,
