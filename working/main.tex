@@ -91,13 +91,17 @@
 \section*{Introduction}
 \addcontentsline{toc}{section}{Introduction}
 Plug-and-Play (PnP) methods are algorithms for solving inverse problems in imaging.
-They combine:
-(i) a known physical measurement model (the forward model), and
-(ii) an image denoiser (often very strong, sometimes learned).
-The key idea is simple: instead of writing an explicit prior (a hand-designed regulariser),
+
+% They combine:
+% (i) a known physical measurement model (the forward model), and
+% (ii) an image denoiser (often very strong, sometimes learned).
+
+The key idea: instead of writing an explicit prior (a hand-designed regulariser),
 PnP uses the denoiser to provide prior information.
+
 Early PnP methods were introduced in \cite{venkatakrishnan2013globalsip,venkatakrishnan2013tr},
-and they were quickly used in many imaging problems \cite{sreehari2016tci,rond2016poisson,yazdanpanah2019mri}.
+and they were quickly used in many imaging problems
+\cite{sreehari2016tci,rond2016poisson,yazdanpanah2019mri}.
 
 \section*{Inverse problems and a basic formulation}
 \addcontentsline{toc}{section}{Inverse problems and a basic formulation}
