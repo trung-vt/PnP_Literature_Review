@@ -95,31 +95,31 @@
     enabling strong reconstructions across modalities
     \cite{kamilov2023pnp_spm,ahmad2020pnp_mri_spm}.
     \\
-\textbf{Purpose:}
-    This review synthesises core PnP algorithmic families
-    (ADMM, HQS,
-    % PGD/ISTA, primal-dual, and sampling-based
-    ),
-    clarifies connections to Regularisation by Denoising (RED) \cite{reehorst2019red_tci},
-    and situates PnP alongside unrolling and
-    diffusion/score-based priors \cite{monga2021unrolling_spm,daras2024diffusion_inverse_survey}.
-    \\
-\textbf{Scope:}
-    We emphasise mathematical structure and convergence assumptions \cite{hauptmann2024convergent_focm,scarlett2022theory_jsait},
-    denoiser classes (classical, CNN, diffusion), and evaluation protocols,
-    including when uncertainty and interpretability are reported.
-    \\
-\textbf{Conclusions:}
-    PnP offers a modular route to physics-informed reconstruction with competitive performance,
-    yet open challenges remain—guarantees with powerful denoisers, principled parameter-noise calibration,
-    and reproducible, modality-specific benchmarks—which we address via consolidated best practices and
-    a research agenda \cite{habring2024nn_regularization_review}.
+% \textbf{Purpose:}
+%     This review synthesises core PnP algorithmic families
+%     (ADMM, HQS,
+%     % PGD/ISTA, primal-dual, and sampling-based
+%     ),
+%     clarifies connections to Regularisation by Denoising (RED) \cite{reehorst2019red_tci},
+%     and situates PnP alongside unrolling and
+%     diffusion/score-based priors \cite{monga2021unrolling_spm,daras2024diffusion_inverse_survey}.
+%     \\
+% \textbf{Scope:}
+%     We emphasise mathematical structure and convergence assumptions \cite{hauptmann2024convergent_focm,scarlett2022theory_jsait},
+%     denoiser classes (classical, CNN, diffusion), and evaluation protocols,
+%     including when uncertainty and interpretability are reported.
+%     \\
+% \textbf{Conclusions:}
+%     PnP offers a modular route to physics-informed reconstruction with competitive performance,
+%     yet open challenges remain—guarantees with powerful denoisers, principled parameter-noise calibration,
+%     and reproducible, modality-specific benchmarks—which we address via consolidated best practices and
+%     a research agenda \cite{habring2024nn_regularization_review}.
 
 
-\section*{Keywords}
-\addcontentsline{toc}{section}{Keywords}
-Plug-and-Play; PnP-ADMM; PnP-HQS; Primal--Dual; RED; Denoising Prior; Learned Regulariser;
-Diffusion Models; Uncertainty; Inverse Problems; Imaging.
+% \section*{Keywords}
+% \addcontentsline{toc}{section}{Keywords}
+% Plug-and-Play; PnP-ADMM; PnP-HQS; Primal--Dual; RED; Denoising Prior; Learned Regulariser;
+% Diffusion Models; Uncertainty; Inverse Problems; Imaging.
 
 % ============================================================
 \section*{1.\quad Introduction}
@@ -127,7 +127,7 @@ Diffusion Models; Uncertainty; Inverse Problems; Imaging.
 \noindent
 \textbf{Motivation.} Many inverse problems seek
     $$
-    \min_{\uvec \in \R^n} \; \E(\uvec) \equiv \tfrac{1}{2}\|\A \uvec - \fvec\|_2^2 + \lambda R(\uvec),
+    \min_{x \in \R^n} \; \E(x) \equiv \tfrac{1}{2}\|\A x - \fvec\|_2^2 + \lambda R(x),
     $$
     where \(R\) enforces prior structure.
     PnP methods sidestep explicit \(R\) by invoking a denoiser \( \Denoise_{\sigma} \)
@@ -138,27 +138,28 @@ Diffusion Models; Uncertainty; Inverse Problems; Imaging.
 %     We focus on deterministic PnP optimisation and sampling-based PnP;
 %     we summarise but do not exhaustively cover general learned unrolled networks.
 
-\paragraph{Box 1 (Key concepts).}
-\begin{itemize}[leftmargin=2em]
-    \item \textit{Denoiser as prior:} \( \Denoise_{\sigma}: \R^n \to \R^n \)
-    acts as a proximity operator surrogate.
-    \item \textit{Averaged/nonexpansive mappings:}
-    critical for fixed-point convergence.
-    \item \textit{Data-fidelity vs prior steps:}
-    balancing step-sizes and penalty parameters.
-\end{itemize}
+% % \paragraph{Box 1 (Key concepts).}
+% \paragraph{Key concepts}
+% \begin{itemize}[leftmargin=2em]
+%     \item \textit{Denoiser as prior:} \( \Denoise_{\sigma}: \R^n \to \R^n \)
+%     acts as a proximity operator surrogate.
+%     \item \textit{Averaged/nonexpansive mappings:}
+%     critical for fixed-point convergence.
+%     \item \textit{Data-fidelity vs prior steps:}
+%     balancing step-sizes and penalty parameters.
+% \end{itemize}
 
-% ============================================================
-\section*{2.\quad Mathematical Preliminaries}
-\addcontentsline{toc}{section}{2. Mathematical Preliminaries}
-\noindent
-\textbf{Notation.} \( \A \in \R^{m \times n} \), data \( \fvec \in \R^m \), variable \( \uvec \in \R^n \). Iterates use \( (\cdot)^{(t)} \). \\
-\textbf{Proximal operator.} For \(g:\R^n \to \R \cup \{+\infty\}\),
-$$
-\prox_{\gamma g}(x) = \arg\min_{y} \; g(y) + \tfrac{1}{2\gamma}\|y-x\|_2^2.
-$$
-\textbf{Averaged operators.} \(T\) is \(\alpha\)-averaged if \( T = (1-\alpha)\Id + \alpha S \) for some nonexpansive \(S\), \( \alpha \in (0,1) \). \\
-\textbf{Denoisers.} Classes: bounded, nonexpansive, firmly nonexpansive, Jacobian-symmetric (RED), Lipschitz with constant \(<1\).
+% % ============================================================
+% \section*{2.\quad Mathematical Preliminaries}
+% \addcontentsline{toc}{section}{2. Mathematical Preliminaries}
+% \noindent
+% \textbf{Notation.} \( \A \in \R^{m \times n} \), data \( \fvec \in \R^m \), variable \( \uvec \in \R^n \). Iterates use \( (\cdot)^{(t)} \). \\
+% \textbf{Proximal operator.} For \(g:\R^n \to \R \cup \{+\infty\}\),
+% $$
+% \prox_{\gamma g}(x) = \arg\min_{y} \; g(y) + \tfrac{1}{2\gamma}\|y-x\|_2^2.
+% $$
+% \textbf{Averaged operators.} \(T\) is \(\alpha\)-averaged if \( T = (1-\alpha)\Id + \alpha S \) for some nonexpansive \(S\), \( \alpha \in (0,1) \). \\
+% \textbf{Denoisers.} Classes: bounded, nonexpansive, firmly nonexpansive, Jacobian-symmetric (RED), Lipschitz with constant \(<1\).
 
 % ============================================================
 \section*{3.\quad PnP via Operator Splitting}
