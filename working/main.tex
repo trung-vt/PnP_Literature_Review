@@ -155,8 +155,12 @@ $$
 x^{(k+1)} = D_\sigma\!\Bigl(x^{(k)} - \gamma \nabla f(x^{(k)})\Bigr),
 $$
 where $\gamma > 0$ is a step size.
+
 This form is studied with convergence guarantees under suitable assumptions on the denoiser
 \cite{ryu2019icml,nair2021fixedpoint}.
+
+Here, $D_\sigma$ can be any denoiser.
+A useful special case is when the denoiser itself is defined by one gradient step on a learned energy; see the discussion below.
 
 \subsection*{Consensus equilibrium viewpoint}
 \addcontentsline{toc}{subsection}{Consensus equilibrium viewpoint}
@@ -202,14 +206,39 @@ Common assumptions include:
     and allows faster methods, such as quasi-Newton ideas \cite{hurault2022icml,hurault2024jmiv,tan2024qn}.
 \end{itemize}
 
-\paragraph*{Gradient-step denoisers (a special case).}
-Some works restrict the denoiser to have the form of one gradient descent step on a learned energy,
-for example
+\subsection*{Gradient-step denoisers (a structured denoiser)}
+\addcontentsline{toc}{subsection}{Gradient-step denoisers (a structured denoiser)}
+Most PnP papers treat the denoiser $D_\sigma$ as a black box.
+Gradient-step denoisers are more structured: the denoiser is defined by one gradient descent step
+on a learned energy function $\phi_\theta : \R^n \to \R$:
 $$
-D(x) = x - \eta \nabla \phi_\theta(x).
+D_{\eta,\theta}(x) = x - \eta \nabla \phi_\theta(x),
 $$
-This makes it easier to connect PnP iterations to explicit objectives and to prove convergence
-under weaker assumptions \cite{hurault2021gsd,hurault2022icml}.
+where $\eta > 0$ is a step size (inside the denoiser) and $\theta$ are learnable parameters
+\cite{hurault2021gsd,hurault2022icml}.
+
+\paragraph*{Why this form is useful.}
+This design makes the denoiser closer to an explicit regularisation model.
+In particular, if $\nabla \phi_\theta$ is Lipschitz and $\eta$ is small enough,
+then $D_{\eta,\theta}$ is also Lipschitz, and it can often be made stable in a way that is easier to analyse.
+This can simplify convergence arguments for PnP algorithms, compared to using an unrestricted denoiser
+\cite{hurault2022icml,hurault2024jmiv}.
+
+\paragraph*{Connection to proximal denoisers.}
+A proximal denoiser is a denoiser that behaves like a proximal map of some regulariser.
+Gradient-step denoisers can be seen as an intermediate option:
+they do not require computing a full proximal map, but they still introduce an explicit energy function
+through $\phi_\theta$.
+This idea is used to build convergent PnP methods with weaker assumptions on the denoiser
+\cite{hurault2022icml,hurault2024jmiv}.
+
+\paragraph*{Practical choices.}
+In practice, $\eta$ controls the denoising strength in a direct way.
+One can treat $(\eta,\theta)$ as the denoiser parameters and tune or learn them together.
+It is also common to control smoothness (for example, by constraining Lipschitz constants)
+to improve stability and convergence behaviour \cite{hurault2022icml}.
+
+Related work also studies faster convergent PnP updates (for example quasi-Newton style variants) once the denoiser has suitable structure \cite{tan2024qn}.
 
 \section*{Choosing parameters: step sizes, penalties, and denoiser strength}
 \addcontentsline{toc}{section}{Choosing parameters: step sizes, penalties, and denoiser strength}
