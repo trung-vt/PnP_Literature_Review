@@ -156,7 +156,7 @@ x^{(k+1)} = D_\sigma\!\Bigl(x^{(k)} - \gamma \nabla f(x^{(k)})\Bigr),
 $$
 where $\gamma > 0$ is a step size.
 This form is studied with convergence guarantees under suitable assumptions on the denoiser
-\cite{ryu2019icml}.
+\cite{ryu2019icml,nair2021fixedpoint}.
 
 \subsection*{Consensus equilibrium viewpoint}
 \addcontentsline{toc}{subsection}{Consensus equilibrium viewpoint}
@@ -201,6 +201,15 @@ Common assumptions include:
     of some (possibly weakly convex) regulariser. This can give stronger convergence guarantees
     and allows faster methods, such as quasi-Newton ideas \cite{hurault2022icml,hurault2024jmiv,tan2024qn}.
 \end{itemize}
+
+\paragraph*{Gradient-step denoisers (a special case).}
+Some works restrict the denoiser to have the form of one gradient descent step on a learned energy,
+for example
+$$
+D(x) = x - \eta \nabla \phi_\theta(x).
+$$
+This makes it easier to connect PnP iterations to explicit objectives and to prove convergence
+under weaker assumptions \cite{hurault2021gsd,hurault2022icml}.
 
 \section*{Choosing parameters: step sizes, penalties, and denoiser strength}
 \addcontentsline{toc}{section}{Choosing parameters: step sizes, penalties, and denoiser strength}
@@ -268,6 +277,11 @@ A summary section can highlight:
     \cite{ryu2019icml,hurault2024jmiv,tan2024qn}.
     \item \textbf{Practical issues.} Parameter tuning, robustness to dataset shift, uncertainty quantification,
     and standard benchmarking remain active topics \cite{kamilov2023spm,kamilov2022pnp}.
+    \item \textbf{PCM (photocurrent mapping) and realistic measurement effects.}
+    For Photocurrent Mapping (PCM), practical effects such as pattern pairing, drift, calibration errors,
+    and device-dependent noise can matter.
+    Open questions include: accurate forward and noise models, sampling design, and fair evaluation
+    when ground truth is limited.
 \end{itemize}
 
 
