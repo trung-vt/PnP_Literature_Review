@@ -90,100 +90,177 @@
 
 \section*{Introduction}
 \addcontentsline{toc}{section}{Introduction}
-Plug-and-Play (PnP) methods integrate a physical forward model with a powerful denoiser, reusing proximal-splitting style iterations while avoiding an explicit handcrafted prior. Early formulations appear in \cite{venkatakrishnan2013globalsip,venkatakrishnan2013tr}, with fast adoption across modalities \cite{sreehari2016tci,rond2016poisson,yazdanpanah2019mri}.
+Plug-and-Play (PnP) methods are algorithms for solving inverse problems in imaging.
+They combine:
+(i) a known physical measurement model (the forward model), and
+(ii) an image denoiser (often very strong, sometimes learned).
+The key idea is simple: instead of writing an explicit prior (a hand-designed regulariser),
+PnP uses the denoiser to provide prior information.
+Early PnP methods were introduced in \cite{venkatakrishnan2013globalsip,venkatakrishnan2013tr},
+and they were quickly used in many imaging problems \cite{sreehari2016tci,rond2016poisson,yazdanpanah2019mri}.
 
-\section*{Inverse problems and baseline formulation}
-\addcontentsline{toc}{section}{Inverse problems and baseline formulation}
-Consider the standard inverse problem
+\section*{Inverse problems and a basic formulation}
+\addcontentsline{toc}{section}{Inverse problems and a basic formulation}
+We observe measurements $y$ that are related to the unknown image $x$ by
 $$
 y = A x + \varepsilon,
 $$
-with data-fidelity term $f(x)$ (often derived from a likelihood) and a prior term $g(x)$.
-Classical optimisation targets
+where $A$ is the forward operator and $\varepsilon$ is noise.
+To recover $x$ from $y$, a common approach is to solve an optimisation problem.
+We choose:
+\begin{itemize}
+    \item a data-fidelity term $f(x)$, which measures how well $A x$ matches $y$, and
+    \item a prior term $g(x)$, which encourages $x$ to look like a realistic image.
+\end{itemize}
+A standard objective is
 $$
-\hat{x} \in \arg\min_x \; f(x) + \lambda g(x).
+\hat{x} \in \arg\min_x \; f(x) + \lambda g(x),
 $$
-PnP replaces the proximal map of $g$ by a denoiser $D_\sigma(\cdot)$.
+where $\lambda > 0$ controls the strength of the prior.
+PnP keeps the data term $f(x)$, but it does not need an explicit formula for $g$.
+Instead, it uses a denoiser $D_\sigma(\cdot)$ (with noise level parameter $\sigma$)
+as a replacement for the proximal step of $g$.
 
-\section*{Algorithmic templates for PnP}
-\addcontentsline{toc}{section}{Algorithmic templates for PnP}
+\section*{Common algorithm structures for PnP}
+\addcontentsline{toc}{section}{Common algorithm structures for PnP}
 
 \subsection*{PnP-ADMM and PnP-HQS}
 \addcontentsline{toc}{subsection}{PnP-ADMM and PnP-HQS}
-A common splitting introduces an auxiliary variable $v$:
+Many PnP methods start by splitting the problem into two variables.
+Introduce an auxiliary variable $v$ and enforce $x=v$:
 $$
 \min_{x,v}\; f(x) + \lambda g(v) \quad \text{s.t. } x=v.
 $$
-PnP-ADMM replaces the $v$-prox step by $D_\sigma$ \cite{chan2017pnpadmm}.
-Parameter adaptation strategies include parameter-free variants \cite{wang2017parameterfree}.
+Algorithms such as ADMM or HQS then alternate between updates for $x$ and updates for $v$.
+In PnP-ADMM, the update for $v$ would normally be a proximal step of $g$,
+but PnP replaces that step by a denoiser:
+$$
+v^{(k+1)} \approx D_\sigma(\,\cdot\,).
+$$
+This idea is analysed and used for image restoration in \cite{chan2017pnpadmm}.
+There are also variants that try to reduce manual parameter tuning, for example
+parameter-free versions \cite{wang2017parameterfree}.
 
 \subsection*{PnP-FBS / PnP-PGD}
 \addcontentsline{toc}{subsection}{PnP-FBS / PnP-PGD}
-Forward-Backward splitting yields iterations of the form
+Another common structure is forward-backward splitting.
+In each iteration, we first take a gradient step to reduce the data term $f(x)$,
+and then we apply the denoiser:
 $$
 x^{(k+1)} = D_\sigma\!\Bigl(x^{(k)} - \gamma \nabla f(x^{(k)})\Bigr),
 $$
-studied with provable fixed-point convergence under suitable denoiser conditions \cite{ryu2019icml}.
+where $\gamma > 0$ is a step size.
+This form is studied with convergence guarantees under suitable assumptions on the denoiser
+\cite{ryu2019icml}.
 
-\subsection*{Consensus equilibrium view}
-\addcontentsline{toc}{subsection}{Consensus equilibrium view}
-Consensus equilibrium (CE) generalises the MAP viewpoint: rather than minimising an explicit objective, solve equilibrium equations balancing a data operator and a denoiser operator \cite{buzzard2018ce}. This is a useful lens for multi-agent or heterogeneous priors.
+\subsection*{Consensus equilibrium viewpoint}
+\addcontentsline{toc}{subsection}{Consensus equilibrium viewpoint}
+PnP does not always correspond to minimising a single explicit objective function.
+An alternative way to understand PnP is the consensus equilibrium (CE) viewpoint.
+In CE, we look for a point where two operators agree:
+one operator comes from the data model (the forward problem),
+and the other operator is the denoiser.
+This idea is formalised in \cite{buzzard2018ce}, and it is useful when combining
+multiple priors or multiple agents.
 
-\section*{How to interpret the denoiser as a prior}
-\addcontentsline{toc}{section}{How to interpret the denoiser as a prior}
-Two dominant interpretations:
+\section*{What does the denoiser mean as a prior?}
+\addcontentsline{toc}{section}{What does the denoiser mean as a prior?}
+There are two main ways to interpret the role of the denoiser:
 \begin{itemize}
-    \item \textbf{Implicit regularisation / fixed points:} PnP defines an iteration whose fixed points are the reconstruction targets, without necessarily corresponding to minimisers of an explicit $g$ \cite{buzzard2018ce,ryu2019icml}.
-    \item \textbf{Explicit objective surrogates:} RED constructs an explicit regulariser from the denoiser, with subsequent clarifications on when such an objective truly exists \cite{romano2017red,reehorst2018red,reehorst2019tci}.
+    \item \textbf{Implicit prior (fixed-point view).}
+    PnP defines an iterative algorithm, and the final reconstruction is typically a fixed point
+    of the update rule. In general, this fixed point does not have to be the minimiser of
+    $f(x) + \lambda g(x)$ for any explicit function $g$ \cite{buzzard2018ce,ryu2019icml}.
+    \item \textbf{Explicit objective (RED view).}
+    Regularization by Denoising (RED) builds an explicit regulariser from the denoiser.
+    Later works clarify when this objective is mathematically well-defined and when it is not
+    \cite{romano2017red,reehorst2018red,reehorst2019tci}.
 \end{itemize}
 
-\section*{Convergence theory: what conditions are used}
-\addcontentsline{toc}{section}{Convergence theory: what conditions are used}
+\section*{Convergence theory: which assumptions are used?}
+\addcontentsline{toc}{section}{Convergence theory: which assumptions are used?}
+Because PnP uses a denoiser that is not always a true proximal operator,
+convergence analysis usually requires extra assumptions.
+Common assumptions include:
 \begin{itemize}
-    \item \textbf{Lipschitz / nonexpansive denoisers:} fixed-point convergence of PnP-FBS and PnP-ADMM under trained denoisers with controlled Lipschitz constants \cite{ryu2019icml}.
-    \item \textbf{Bounded denoisers and continuation:} fixed-point convergence arguments in PnP-ADMM for image restoration \cite{chan2017pnpadmm}.
-    \item \textbf{Proximal denoisers:} train/characterise denoisers as proximal maps (possibly of weakly-convex functionals), enabling stronger convergence and acceleration results \cite{hurault2022icml,hurault2024jmiv,tan2024qn}.
+    \item \textbf{Lipschitz or nonexpansive denoisers.}
+    Some results require the denoiser to be Lipschitz continuous, sometimes with a constant
+    at most $1$, and then one can prove fixed-point convergence for certain PnP algorithms
+    \cite{ryu2019icml}.
+    \item \textbf{Bounded denoisers and continuation.}
+    Some analyses assume the denoiser outputs do not change too much and use continuation
+    (changing parameters gradually) to improve stability in practice \cite{chan2017pnpadmm}.
+    \item \textbf{Proximal denoisers.}
+    Another approach is to design or train the denoiser so that it behaves like a proximal map
+    of some (possibly weakly convex) regulariser. This can give stronger convergence guarantees
+    and allows faster methods, such as quasi-Newton ideas \cite{hurault2022icml,hurault2024jmiv,tan2024qn}.
 \end{itemize}
 
-\section*{Choosing parameters: noise levels and tuning}
-\addcontentsline{toc}{section}{Choosing parameters: noise levels and tuning}
-PnP introduces algorithmic parameters (step sizes, penalties) and denoiser parameters ($\sigma$). Tuning-free approaches aim to reduce manual selection burden \cite{wei2022tfpnp}.
-Practical discussion can include: stability to parameter mismatch, continuation schedules, and stopping criteria.
+\section*{Choosing parameters: step sizes, penalties, and denoiser strength}
+\addcontentsline{toc}{section}{Choosing parameters: step sizes, penalties, and denoiser strength}
+PnP methods have parameters from the optimisation algorithm (for example step size $\gamma$,
+or an ADMM penalty parameter) and also parameters of the denoiser (for example $\sigma$).
+These parameters strongly affect reconstruction quality and stability.
+Some methods aim to reduce manual tuning, for example tuning-free PnP approaches
+\cite{wei2022tfpnp}.
+In practice, it is common to discuss:
+continuation schedules, stopping rules, and sensitivity to parameter mismatch.
 
-\section*{Applications and observation models}
-\addcontentsline{toc}{section}{Applications and observation models}
+\section*{Applications and measurement models}
+\addcontentsline{toc}{section}{Applications and measurement models}
 
 \subsection*{Electron tomography and sparse interpolation}
 \addcontentsline{toc}{subsection}{Electron tomography and sparse interpolation}
-PnP was demonstrated in electron tomography and sparse interpolation settings, highlighting nonlocal structure exploitation \cite{sreehari2016tci}.
+PnP was used in electron tomography and sparse interpolation problems in \cite{sreehari2016tci}.
+This shows that PnP can exploit repeated structures in images even when measurements are limited.
 
 \subsection*{Poisson and photon-limited imaging}
 \addcontentsline{toc}{subsection}{Poisson and photon-limited imaging}
-For Poisson noise, variance-stabilisation and PnP formulations provide practical pipelines \cite{rond2016poisson}.
+In photon-limited imaging, the noise is often modelled by a Poisson distribution.
+PnP methods have been adapted to this setting, for example using appropriate data-fidelity terms
+and stabilisation techniques \cite{rond2016poisson}.
 
 \subsection*{Nonlinear forward models}
 \addcontentsline{toc}{subsection}{Nonlinear forward models}
-PnP can be extended to nonlinear inverse problems by embedding denoisers within iterative schemes compatible with nonlinear data terms \cite{kamilov2017nonlinear}.
+Some imaging systems are nonlinear, meaning that $y$ is not a linear function of $x$.
+PnP can still be used by combining denoisers with iterative methods designed for nonlinear
+data terms \cite{kamilov2017nonlinear}.
 
 \subsection*{MRI reconstruction}
 \addcontentsline{toc}{subsection}{MRI reconstruction}
-PnP has been adopted for accelerated MRI, including parallel MRI settings using deep denoisers \cite{yazdanpanah2019mri}.
+PnP has also been used for accelerated MRI reconstruction, including parallel MRI setups,
+often by using deep denoisers inside an iterative solver \cite{yazdanpanah2019mri}.
 
-\section*{Scalability: online and stochastic PnP}
-\addcontentsline{toc}{section}{Scalability: online and stochastic PnP}
-For large-scale or streaming data, online and stochastic variants reduce per-iteration cost or amortise expensive denoising calls \cite{sun2019onlinepnp,tang2020stochastic}.
+\section*{Scalability: large problems, online methods, and stochastic updates}
+\addcontentsline{toc}{section}{Scalability: large problems, online methods, and stochastic updates}
+For large-scale problems, applying a strong denoiser many times can be expensive.
+To reduce computation, there are online and stochastic versions of PnP that use
+smaller batches of data or cheaper updates at each iteration \cite{sun2019onlinepnp,tang2020stochastic}.
+These methods aim to keep reconstruction quality while reducing runtime.
 
 \section*{Connections to denoising-based AMP}
 \addcontentsline{toc}{section}{Connections to denoising-based AMP}
-Denoising-based AMP methods also reuse denoisers as modular priors, with state-evolution style insights under appropriate sensing assumptions \cite{metzler2016damp}. Learned variants train components end-to-end \cite{metzler2017ldamp}. Robustness beyond i.i.d.\ Gaussian sensing motivates VAMP-based denoising approaches \cite{schniter2016dvamp}, and coloured-noise effective models are explored for compressive MRI \cite{metzler2020dvdamp}.
+Approximate Message Passing (AMP) is another family of algorithms that uses denoisers as priors.
+In denoising-based AMP, the denoiser is used inside an iterative method that can sometimes be
+analysed using state evolution \cite{metzler2016damp}.
+There are also learned versions that train parts of the algorithm \cite{metzler2017ldamp}.
+When the sensing model is not i.i.d.\ Gaussian, VAMP-type methods are often more robust
+\cite{schniter2016dvamp}, and extensions study effective coloured noise in compressive MRI
+\cite{metzler2020dvdamp}.
 
 \section*{Summary and open problems}
 \addcontentsline{toc}{section}{Summary and open problems}
-A short closing section can summarise:
+PnP methods are popular because they combine physical models with strong denoisers.
+However, there are still important open questions.
+A summary section can highlight:
 \begin{itemize}
-    \item When PnP behaves like optimisation vs equilibrium solving \cite{buzzard2018ce,kamilov2023spm}.
-    \item What convergence guarantees exist and which assumptions are realistic \cite{ryu2019icml,hurault2024jmiv,tan2024qn}.
-    \item Practical gaps: parameter selection, dataset shift, uncertainty quantification, and benchmark standardisation \cite{kamilov2023spm,kamilov2022pnp}.
+    \item \textbf{Objective vs equilibrium.} In many cases PnP behaves like solving an optimisation problem,
+    but in general it can be better understood as solving an equilibrium condition \cite{buzzard2018ce,kamilov2023spm}.
+    \item \textbf{Which convergence assumptions are realistic.} Convergence guarantees often require
+    assumptions on the denoiser, and it is important to understand when these assumptions hold in practice
+    \cite{ryu2019icml,hurault2024jmiv,tan2024qn}.
+    \item \textbf{Practical issues.} Parameter tuning, robustness to dataset shift, uncertainty quantification,
+    and standard benchmarking remain active topics \cite{kamilov2023spm,kamilov2022pnp}.
 \end{itemize}
 
 
