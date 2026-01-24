@@ -103,7 +103,7 @@ Early PnP methods were introduced in \cite{venkatakrishnan2013globalsip,venkatak
 and they were quickly used in many imaging problems
 \cite{sreehari2016tci,rond2016poisson,yazdanpanah2019mri}.
 
-\section*{Inverse problems and a basic formulation}
+\section*{Inverse problems}
 \addcontentsline{toc}{section}{Inverse problems and a basic formulation}
 We observe measurements $y$ that are related to the unknown image $x$ by
 $$
@@ -121,6 +121,7 @@ $$
 \hat{x} \in \arg\min_x \; f(x) + \lambda g(x),
 $$
 where $\lambda > 0$ controls the strength of the prior.
+
 PnP keeps the data term $f(x)$, but it does not need an explicit formula for $g$.
 Instead, it uses a denoiser $D_\sigma(\cdot)$ (with noise level parameter $\sigma$)
 as a replacement for the proximal step of $g$.
