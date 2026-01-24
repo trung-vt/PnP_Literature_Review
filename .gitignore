@@ -13,6 +13,8 @@
 *.fls
 *.fdb_latexmk
 *.synctex.gz
+*.xml
+*.bcf
 
 *.png
 *.svg

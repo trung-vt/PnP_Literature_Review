@@ -19,11 +19,23 @@
 \usepackage{bm}
 \usepackage{siunitx}
 \usepackage{graphicx}
-\usepackage{subcaption}
+\usepackage[
+    skip=1pt,
+    % font=tiny
+]{subcaption} % for subfigures
 \usepackage{booktabs}
 \usepackage{enumitem}
 \usepackage{xcolor}
 \usepackage{hyperref}
+\geometry{margin=1in}
+\usepackage[nottoc]{tocbibind} % Include bibliography in ToC
+\usepackage[%
+    backend=biber,
+    natbib=true,
+    style=alphabetic,
+    maxnames = 100,
+]{biblatex}
+\addbibresource{references.bib}
 \usepackage[nameinlink,capitalize]{cleveref}
 \usepackage{algorithm}
 \usepackage[noend]{algpseudocode}
@@ -347,8 +359,7 @@ Under Jacobian-symmetry and certain conditions, \( \nabla \E_{\mathrm{RED}}(x) =
 % \addcontentsline{toc}{section}{References}
 % \noindent
 
-\bibliographystyle{plain}
-\bibliography{references}
+\printbibliography
 
 % % ============================================================
 % % APPENDICES

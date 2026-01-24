@@ -1,0 +1,193 @@
+% ============================================================
+% Review on Plug-and-Play (PnP) Methods
+% ============================================================
+
+\documentclass[11pt,a4paper]{article}
+
+% ---------- Packages ----------
+\usepackage[british]{babel}
+\usepackage[T1]{fontenc}
+\usepackage{lmodern}
+\usepackage[a4paper,margin=1in]{geometry}
+\usepackage{microtype}
+\usepackage{setspace}
+\onehalfspacing
+
+\usepackage{amsmath,amssymb,mathtools,amsthm}
+\numberwithin{equation}{section}
+
+\usepackage{bm}
+\usepackage{siunitx}
+\usepackage{graphicx}
+\usepackage[
+    skip=1pt,
+    % font=tiny
+]{subcaption} % for subfigures
+\usepackage{booktabs}
+\usepackage{enumitem}
+\usepackage{xcolor}
+\usepackage{hyperref}
+\geometry{margin=1in}
+\usepackage[nottoc]{tocbibind} % Include bibliography in ToC
+\usepackage[%
+    backend=biber,
+    natbib=true,
+    style=alphabetic,
+    maxnames = 100,
+]{biblatex}
+\addbibresource{references2.bib}
+\usepackage[nameinlink,capitalize]{cleveref}
+\usepackage{algorithm}
+\usepackage[noend]{algpseudocode}
+
+% ---------- Hyperref ----------
+\hypersetup{
+    colorlinks=true,
+    linkcolor=blue!40!black,
+    citecolor=blue!40!black,
+    urlcolor=blue!40!black,
+    pdfauthor={\textbf{Thanh Trung Vu}},
+    pdftitle={Plug-and-Play Methods in Inverse Problems: A Review}
+}
+
+% ---------- Macros (notation preferences) ----------
+% Iteration index style (\cdot)^{(t)}
+\newcommand{\iter}[1]{#1^{(t)}}
+\newcommand{\itern}[2]{#1^{(t+#2)}}
+
+% Cost function E (not J)
+\newcommand{\E}{E}
+
+% Linear forward operator and variables
+\newcommand{\A}{A}
+\newcommand{\uvec}{u}
+\newcommand{\fvec}{f}
+\newcommand{\noise}{\varepsilon}
+
+% Proximal and denoiser
+\newcommand{\prox}{\mathrm{prox}}
+\newcommand{\Denoise}{\mathcal{D}}
+\newcommand{\Lips}{L}
+
+% Operators and sets
+\newcommand{\R}{\mathbb{R}}
+\newcommand{\Id}{\mathrm{Id}}
+
+% TODO marker
+\newcommand{\TODO}[1]{\textcolor{red}{[TODO: #1]}}
+
+% ---------- Theorem-like environments ----------
+\theoremstyle{plain}
+\newtheorem{theorem}{Theorem}[section]
+\newtheorem{assumption}{Assumption}[section]
+\newtheorem{proposition}{Proposition}[section]
+\theoremstyle{remark}
+\newtheorem{remark}{Remark}[section]
+\newtheorem{definition}{Definition}[section]
+
+% ============================================================
+\begin{document}
+
+\section*{Introduction}
+\addcontentsline{toc}{section}{Introduction}
+Plug-and-Play (PnP) methods integrate a physical forward model with a powerful denoiser, reusing proximal-splitting style iterations while avoiding an explicit handcrafted prior. Early formulations appear in \cite{venkatakrishnan2013globalsip,venkatakrishnan2013tr}, with fast adoption across modalities \cite{sreehari2016tci,rond2016poisson,yazdanpanah2019mri}.
+
+\section*{Inverse problems and baseline formulation}
+\addcontentsline{toc}{section}{Inverse problems and baseline formulation}
+Consider the standard inverse problem
+$$
+y = A x + \varepsilon,
+$$
+with data-fidelity term $f(x)$ (often derived from a likelihood) and a prior term $g(x)$.
+Classical optimisation targets
+$$
+\hat{x} \in \arg\min_x \; f(x) + \lambda g(x).
+$$
+PnP replaces the proximal map of $g$ by a denoiser $D_\sigma(\cdot)$.
+
+\section*{Algorithmic templates for PnP}
+\addcontentsline{toc}{section}{Algorithmic templates for PnP}
+
+\subsection*{PnP-ADMM and PnP-HQS}
+\addcontentsline{toc}{subsection}{PnP-ADMM and PnP-HQS}
+A common splitting introduces an auxiliary variable $v$:
+$$
+\min_{x,v}\; f(x) + \lambda g(v) \quad \text{s.t. } x=v.
+$$
+PnP-ADMM replaces the $v$-prox step by $D_\sigma$ \cite{chan2017pnpadmm}.
+Parameter adaptation strategies include parameter-free variants \cite{wang2017parameterfree}.
+
+\subsection*{PnP-FBS / PnP-PGD}
+\addcontentsline{toc}{subsection}{PnP-FBS / PnP-PGD}
+Forward-Backward splitting yields iterations of the form
+$$
+x^{(k+1)} = D_\sigma\!\Bigl(x^{(k)} - \gamma \nabla f(x^{(k)})\Bigr),
+$$
+studied with provable fixed-point convergence under suitable denoiser conditions \cite{ryu2019icml}.
+
+\subsection*{Consensus equilibrium view}
+\addcontentsline{toc}{subsection}{Consensus equilibrium view}
+Consensus equilibrium (CE) generalises the MAP viewpoint: rather than minimising an explicit objective, solve equilibrium equations balancing a data operator and a denoiser operator \cite{buzzard2018ce}. This is a useful lens for multi-agent or heterogeneous priors.
+
+\section*{How to interpret the denoiser as a prior}
+\addcontentsline{toc}{section}{How to interpret the denoiser as a prior}
+Two dominant interpretations:
+\begin{itemize}
+    \item \textbf{Implicit regularisation / fixed points:} PnP defines an iteration whose fixed points are the reconstruction targets, without necessarily corresponding to minimisers of an explicit $g$ \cite{buzzard2018ce,ryu2019icml}.
+    \item \textbf{Explicit objective surrogates:} RED constructs an explicit regulariser from the denoiser, with subsequent clarifications on when such an objective truly exists \cite{romano2017red,reehorst2018red,reehorst2019tci}.
+\end{itemize}
+
+\section*{Convergence theory: what conditions are used}
+\addcontentsline{toc}{section}{Convergence theory: what conditions are used}
+\begin{itemize}
+    \item \textbf{Lipschitz / nonexpansive denoisers:} fixed-point convergence of PnP-FBS and PnP-ADMM under trained denoisers with controlled Lipschitz constants \cite{ryu2019icml}.
+    \item \textbf{Bounded denoisers and continuation:} fixed-point convergence arguments in PnP-ADMM for image restoration \cite{chan2017pnpadmm}.
+    \item \textbf{Proximal denoisers:} train/characterise denoisers as proximal maps (possibly of weakly-convex functionals), enabling stronger convergence and acceleration results \cite{hurault2022icml,hurault2024jmiv,tan2024qn}.
+\end{itemize}
+
+\section*{Choosing parameters: noise levels and tuning}
+\addcontentsline{toc}{section}{Choosing parameters: noise levels and tuning}
+PnP introduces algorithmic parameters (step sizes, penalties) and denoiser parameters ($\sigma$). Tuning-free approaches aim to reduce manual selection burden \cite{wei2022tfpnp}.
+Practical discussion can include: stability to parameter mismatch, continuation schedules, and stopping criteria.
+
+\section*{Applications and observation models}
+\addcontentsline{toc}{section}{Applications and observation models}
+
+\subsection*{Electron tomography and sparse interpolation}
+\addcontentsline{toc}{subsection}{Electron tomography and sparse interpolation}
+PnP was demonstrated in electron tomography and sparse interpolation settings, highlighting nonlocal structure exploitation \cite{sreehari2016tci}.
+
+\subsection*{Poisson and photon-limited imaging}
+\addcontentsline{toc}{subsection}{Poisson and photon-limited imaging}
+For Poisson noise, variance-stabilisation and PnP formulations provide practical pipelines \cite{rond2016poisson}.
+
+\subsection*{Nonlinear forward models}
+\addcontentsline{toc}{subsection}{Nonlinear forward models}
+PnP can be extended to nonlinear inverse problems by embedding denoisers within iterative schemes compatible with nonlinear data terms \cite{kamilov2017nonlinear}.
+
+\subsection*{MRI reconstruction}
+\addcontentsline{toc}{subsection}{MRI reconstruction}
+PnP has been adopted for accelerated MRI, including parallel MRI settings using deep denoisers \cite{yazdanpanah2019mri}.
+
+\section*{Scalability: online and stochastic PnP}
+\addcontentsline{toc}{section}{Scalability: online and stochastic PnP}
+For large-scale or streaming data, online and stochastic variants reduce per-iteration cost or amortise expensive denoising calls \cite{sun2019onlinepnp,tang2020stochastic}.
+
+\section*{Connections to denoising-based AMP}
+\addcontentsline{toc}{section}{Connections to denoising-based AMP}
+Denoising-based AMP methods also reuse denoisers as modular priors, with state-evolution style insights under appropriate sensing assumptions \cite{metzler2016damp}. Learned variants train components end-to-end \cite{metzler2017ldamp}. Robustness beyond i.i.d.\ Gaussian sensing motivates VAMP-based denoising approaches \cite{schniter2016dvamp}, and coloured-noise effective models are explored for compressive MRI \cite{metzler2020dvdamp}.
+
+\section*{Summary and open problems}
+\addcontentsline{toc}{section}{Summary and open problems}
+A short closing section can summarise:
+\begin{itemize}
+    \item When PnP behaves like optimisation vs equilibrium solving \cite{buzzard2018ce,kamilov2023spm}.
+    \item What convergence guarantees exist and which assumptions are realistic \cite{ryu2019icml,hurault2024jmiv,tan2024qn}.
+    \item Practical gaps: parameter selection, dataset shift, uncertainty quantification, and benchmark standardisation \cite{kamilov2023spm,kamilov2022pnp}.
+\end{itemize}
+
+
+\printbibliography
+
+
+\end{document}
