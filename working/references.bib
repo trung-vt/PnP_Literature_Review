@@ -63,23 +63,13 @@ number = {3},
 pages = {2001-2020},
 year = {2018},
 doi = {10.1137/17M1122451},
-
 URL = {
-
         https://doi.org/10.1137/17M1122451
-
-
-
 },
 eprint = {
-
         https://doi.org/10.1137/17M1122451
-
-
-
-}
-,
-    abstract = { Regularized inversion methods for image reconstruction are used widely due to their tractability and their ability to combine complex physical sensor models with useful regularity criteria. Such methods motivated the recently developed Plug-and-Play prior method, which provides a framework to use advanced denoising algorithms as regularizers in inversion. However, the need to formulate regularized inversion as the solution to an optimization problem limits the expressiveness of possible regularity conditions and physical sensor models. In this paper, we introduce the idea of consensus equilibrium (CE), which generalizes regularized inversion to include a much wider variety of both forward (or data fidelity) components and prior (or regularity) components without the need for either to be expressed using a cost function. CE is based on the solution of a set of equilibrium equations that balance data fit and regularity. In this framework, the problem of MAP estimation in regularized inversion is replaced by the problem of solving these equilibrium equations, which can be approached in multiple ways. The key contribution of CE is to provide a novel framework for fusing multiple heterogeneous models of physical sensors or models learned from data. We describe the derivation of the CE equations and prove that the solution of the CE equations generalizes the standard MAP estimate under appropriate circumstances. We also discuss algorithms for solving the CE equations, including a version of the Douglas--Rachford/alternating direction method of multipliers algorithm with a novel form of preconditioning and Newton's method, both standard form and a Jacobian-free form using Krylov subspaces. We give several examples to illustrate the idea of CE and the convergence properties of these algorithms and demonstrate this method on some toy problems and on a denoising example in which we use an array of convolutional neural network denoisers, none of which is tuned to match the noise level in a noisy image but which in consensus can achieve a better result than any of them individually. }
+},
+abstract = { Regularized inversion methods for image reconstruction are used widely due to their tractability and their ability to combine complex physical sensor models with useful regularity criteria. Such methods motivated the recently developed Plug-and-Play prior method, which provides a framework to use advanced denoising algorithms as regularizers in inversion. However, the need to formulate regularized inversion as the solution to an optimization problem limits the expressiveness of possible regularity conditions and physical sensor models. In this paper, we introduce the idea of consensus equilibrium (CE), which generalizes regularized inversion to include a much wider variety of both forward (or data fidelity) components and prior (or regularity) components without the need for either to be expressed using a cost function. CE is based on the solution of a set of equilibrium equations that balance data fit and regularity. In this framework, the problem of MAP estimation in regularized inversion is replaced by the problem of solving these equilibrium equations, which can be approached in multiple ways. The key contribution of CE is to provide a novel framework for fusing multiple heterogeneous models of physical sensors or models learned from data. We describe the derivation of the CE equations and prove that the solution of the CE equations generalizes the standard MAP estimate under appropriate circumstances. We also discuss algorithms for solving the CE equations, including a version of the Douglas--Rachford/alternating direction method of multipliers algorithm with a novel form of preconditioning and Newton's method, both standard form and a Jacobian-free form using Krylov subspaces. We give several examples to illustrate the idea of CE and the convergence properties of these algorithms and demonstrate this method on some toy problems and on a denoising example in which we use an array of convolutional neural network denoisers, none of which is tuned to match the noise level in a noisy image but which in consensus can achieve a better result than any of them individually. }
 }
 
 @inproceedings{ryu2019icml,
@@ -283,14 +273,15 @@ eprint = {
 }
 
 @article{kamilov2023spm,
-  author  = {Kamilov, Ulugbek S. and Bouman, Charles A. and Buzzard, Gregery T. and Wohlberg, Brendt},
-  title   = {Plug-and-Play Methods for Integrating Physical and Learned Models in Computational Imaging: Theory, Algorithms, and Applications},
-  journal = {IEEE Signal Processing Magazine},
-  year    = {2023},
-  volume  = {40},
-  number  = {1},
-  pages   = {85--97},
-  doi     = {10.1109/MSP.2022.3199595}
+  author={Kamilov, Ulugbek S. and Bouman, Charles A. and Buzzard, Gregery T. and Wohlberg, Brendt},
+  journal={IEEE Signal Processing Magazine},
+  title={Plug-and-Play Methods for Integrating Physical and Learned Models in Computational Imaging: Theory, algorithms, and applications},
+  year={2023},
+  volume={40},
+  number={1},
+  pages={85-97},
+  keywords={Training data;Machine learning algorithms;Computational modeling;Magnetic resonance imaging;Computed tomography;Imaging;Signal processing algorithms},
+  doi={10.1109/MSP.2022.3199595}
 }
 
 % =========================
@@ -368,15 +359,23 @@ eprint = {
 % =========================
 
 @article{laumont2022pnpula,
-  title = {Bayesian Imaging Using Plug \& Play Priors: When Langevin Meets Tweedie},
-  author = {Laumont, R{\'e}mi and De Bortoli, Valentin and Almansa, Andr{\'e}s and Delon, Julie and Durmus, Alain and Pereyra, Marcelo A.},
-  journal = {SIAM Journal on Imaging Sciences},
-  volume = {15},
-  number = {2},
-  pages = {701--737},
-  year = {2022},
-  doi = {10.1137/21M1406349}
+title = {Bayesian Imaging Using Plug \& Play Priors: When Langevin Meets Tweedie},
+author = {Laumont, R\'{e}mi and Bortoli, Valentin De and Almansa, Andr\'{e}s and Delon, Julie and Durmus, Alain and Pereyra, Marcelo},
+journal = {SIAM Journal on Imaging Sciences},
+volume = {15},
+number = {2},
+pages = {701-737},
+year = {2022},
+doi = {10.1137/21M1406349},
+URL = {
+        https://doi.org/10.1137/21M1406349
+},
+eprint = {
+        https://doi.org/10.1137/21M1406349
+},
+abstract = { Since the seminal work of Venkatakrishnan, Bouman, and Wohlberg [Proceedings of the Global Conference on Signal and Information Processing, IEEE, 2013, pp. 945--948] in 2013, Plug \& Play (PnP) methods have become ubiquitous in Bayesian imaging. These methods derive estimators for inverse problems in imaging by combining an explicit likelihood function with a prior that is implicitly defined by an image denoising algorithm. In the case of optimization schemes, some recent works guarantee the convergence to a fixed point, albeit not necessarily a maximum a posteriori Bayesian estimate. In the case of Monte Carlo sampling schemes for general Bayesian computation, to the best of our knowledge there is no known proof of convergence. Algorithm convergence issues aside, there are important open questions regarding whether the underlying Bayesian models and estimators are well defined, are well posed, and have the basic regularity properties required to support efficient Bayesian computation schemes. This paper develops theory for Bayesian analysis and computation with PnP priors. We introduce PnP-ULA (Plug \& Play unadjusted Langevin algorithm) for Monte Carlo sampling and minimum mean square error estimation. Using recent results on the quantitative convergence of Markov chains, we establish detailed convergence guarantees for this algorithm under realistic assumptions on the denoising operators used, with special attention to denoisers based on deep neural networks. We also show that these algorithms approximately target a decision-theoretically optimal Bayesian model that is well posed and meaningful from a frequentist viewpoint. PnP-ULA is demonstrated on several canonical problems such as image deblurring and inpainting, where it is used for point estimation as well as for uncertainty visualization and quantification. }
 }
+
 
 @inproceedings{renaud2024mismatch,
   title = {Plug-and-Play Posterior Sampling under Mismatched Measurement and Prior Models},
