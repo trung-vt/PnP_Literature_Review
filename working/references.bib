@@ -93,16 +93,20 @@
   url     = {https://jmlr.org/papers/v23/20-1297.html}
 }
 
-@inproceedings{hurault2022icml,
-  author    = {Hurault, Samuel and Leclaire, Arthur and Papadakis, Nicolas},
-  title     = {Proximal Denoiser for Convergent Plug-and-Play Optimization with Nonconvex Regularization},
-  booktitle = {Proceedings of the 39th International Conference on Machine Learning (ICML)},
-  series    = {Proceedings of Machine Learning Research},
-  volume    = {162},
-  year      = {2022},
-  pages     = {9466--9482},
-  publisher = {PMLR},
-  url       = {https://proceedings.mlr.press/v162/hurault22a.html}
+@InProceedings{hurault2022icml,
+  title = 	 {Proximal Denoiser for Convergent Plug-and-Play Optimization with Nonconvex Regularization},
+  author =       {Hurault, Samuel and Leclaire, Arthur and Papadakis, Nicolas},
+  booktitle = 	 {Proceedings of the 39th International Conference on Machine Learning},
+  pages = 	 {9483--9505},
+  year = 	 {2022},
+  editor = 	 {Chaudhuri, Kamalika and Jegelka, Stefanie and Song, Le and Szepesvari, Csaba and Niu, Gang and Sabato, Sivan},
+  volume = 	 {162},
+  series = 	 {Proceedings of Machine Learning Research},
+  month = 	 {17--23 Jul},
+  publisher =    {PMLR},
+  pdf = 	 {https://proceedings.mlr.press/v162/hurault22a/hurault22a.pdf},
+  url = 	 {https://proceedings.mlr.press/v162/hurault22a.html},
+  abstract = 	 {Plug-and-Play (PnP) methods solve ill-posed inverse problems through iterative proximal algorithms by replacing a proximal operator by a denoising operation. When applied with deep neural network denoisers, these methods have shown state-of-the-art visual performance for image restoration problems. However, their theoretical convergence analysis is still incomplete. Most of the existing convergence results consider nonexpansive denoisers, which is non-realistic, or limit their analysis to strongly convex data-fidelity terms in the inverse problem to solve. Recently, it was proposed to train the denoiser as a gradient descent step on a functional parameterized by a deep neural network. Using such a denoiser guarantees the convergence of the PnP version of the Half-Quadratic-Splitting (PnP-HQS) iterative algorithm. In this paper, we show that this gradient denoiser can actually correspond to the proximal operator of another scalar function. Given this new result, we exploit the convergence theory of proximal algorithms in the nonconvex setting to obtain convergence results for PnP-PGD (Proximal Gradient Descent) and PnP-ADMM (Alternating Direction Method of Multipliers). When built on top of a smooth gradient denoiser, we show that PnP-PGD and PnP-ADMM are convergent and target stationary points of an explicit functional. These convergence results are confirmed with numerical experiments on deblurring, super-resolution and inpainting.}
 }
 
 @article{hurault2024jmiv,
@@ -145,15 +149,15 @@
 }
 
 @article{kamilov2017nonlinear,
-  author  = {Kamilov, Ulugbek S. and Wohlberg, Brendt and Mansour, Hassan and Bostan, Emrah},
-  title   = {Plug-and-Play Priors for Solving Nonlinear Imaging Inverse Problems},
-  journal = {IEEE Signal Processing Letters},
-  year    = {2017},
-  volume  = {24},
-  number  = {12},
-  pages   = {1872--1876},
-  doi     = {10.1109/LSP.2017.2763583}
-}
+  author={Kamilov, Ulugbek S. and Mansour, Hassan and Wohlberg, Brendt},
+  journal={IEEE Signal Processing Letters},
+  title={A Plug-and-Play Priors Approach for Solving Nonlinear Imaging Inverse Problems},
+  year={2017},
+  volume={24},
+  number={12},
+  pages={1872-1876},
+  keywords={Inverse problems;Scattering;Imaging;Optimization;Computational modeling;Mathematical model;Noise measurement;Iterative methods;Fast iterative shrinkage/thresholding algorithm (FISTA);image reconstruction;inverse scattering;nonlinear inverse problems;plug-and-play priors (PPP)},
+  doi={10.1109/LSP.2017.2763583}}
 
 @inproceedings{yazdanpanah2019mri,
   author    = {Pour Yazdanpanah, Ali and Afacan, Onur and Warfield, Simon K.},
