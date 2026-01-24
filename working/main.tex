@@ -103,6 +103,8 @@ Early PnP methods were introduced in \cite{venkatakrishnan2013globalsip,venkatak
 and they were quickly used in many imaging problems
 \cite{sreehari2016tci,rond2016poisson,yazdanpanah2019mri}.
 
+For a broad tutorial overview of PnP methods, variations, and current practice, see \cite{kamilov2023spm}.
+
 \section*{Inverse problems}
 \addcontentsline{toc}{section}{Inverse problems and a basic formulation}
 We observe measurements $y$ that are related to the unknown image $x$ by
@@ -186,6 +188,19 @@ There are two main ways to interpret the role of the denoiser:
     Later works clarify when this objective is mathematically well-defined and when it is not
     \cite{romano2017red,reehorst2018red,reehorst2019tci}.
 \end{itemize}
+
+\paragraph*{Interpretability: what prior does a denoiser represent?}
+A common question is: what does the denoiser mean as a prior model?
+
+One useful answer comes from a Bayesian view.
+If $D_\sigma$ is (approximately) an MMSE denoiser for additive Gaussian noise,
+then $D_\sigma(x) - x$ can be related to a smoothed \emph{score function}
+(the gradient of the log-prior), via the Tweedie formula.
+This connects PnP to an implicit probability model and helps explain why some PnP updates
+look like gradient steps on an implicit energy.
+This idea is used explicitly in Bayesian PnP methods that do posterior sampling (and not only point estimation)
+\cite{laumont2022pnpula,reehorst2019red,park2024scorepnp}.
+
 
 \section*{Convergence theory: which assumptions are used?}
 \addcontentsline{toc}{section}{Convergence theory: which assumptions are used?}
@@ -293,24 +308,41 @@ When the sensing model is not i.i.d.\ Gaussian, VAMP-type methods are often more
 \cite{schniter2016dvamp}, and extensions study effective coloured noise in compressive MRI
 \cite{metzler2020dvdamp}.
 
-\section*{Summary and open problems}
+\section*{Future directions}
 \addcontentsline{toc}{section}{Summary and open problems}
 PnP methods are popular because they combine physical models with strong denoisers.
 However, there are still important open questions.
-A summary section can highlight:
 \begin{itemize}
-    \item \textbf{Objective vs equilibrium.} In many cases PnP behaves like solving an optimisation problem,
-    but in general it can be better understood as solving an equilibrium condition \cite{buzzard2018ce,kamilov2023spm}.
     \item \textbf{Which convergence assumptions are realistic.} Convergence guarantees often require
     assumptions on the denoiser, and it is important to understand when these assumptions hold in practice
     \cite{ryu2019icml,hurault2024jmiv,tan2024qn}.
+
     \item \textbf{Practical issues.} Parameter tuning, robustness to dataset shift, uncertainty quantification,
     and standard benchmarking remain active topics \cite{kamilov2023spm,kamilov2022pnp}.
+
+    \item \textbf{Uncertainty quantification (UQ).}
+    Most PnP methods output one reconstruction (a point estimate), but many applications need an uncertainty estimate,
+    for example pixel-wise credibility or uncertainty in derived quantities.
+
+    A promising direction is Bayesian PnP, where a denoiser is used inside a sampling algorithm (for example Langevin-type sampling)
+    to produce many samples and then estimate posterior mean, variance, and credible intervals
+    \cite{laumont2022pnpula}.
+
+    An open issue is \emph{calibration under mismatch}: the uncertainty can be misleading if the forward model,
+    noise model, or denoiser training distribution do not match the real experiment
+    \cite{renaud2024mismatch}.
+
+    There are also works that explicitly target model uncertainty in a PnP-style pipeline
+    \cite{ekmekci2021pnp_uq,terris2023pnp_uq_radio}.
+
     \item \textbf{PCM (photocurrent mapping) and realistic measurement effects.}
     For Photocurrent Mapping (PCM), practical effects such as pattern pairing, drift, calibration errors,
     and device-dependent noise can matter.
-    Open questions include: accurate forward and noise models, sampling design, and fair evaluation
-    when ground truth is limited.
+
+    Open questions include: accurate forward and noise models, sampling design, and fair evaluation when ground truth is limited.
+
+    This is also a setting where interpretability (what features the prior promotes) and UQ (how confident the reconstruction is)
+    can be especially important.
 \end{itemize}
 
 
